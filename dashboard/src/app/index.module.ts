@@ -27,6 +27,7 @@ import {CodenvyOnpremConfig} from './onprem/onprem-config';
 import {WorkspaceConfig} from './workspace/workspace-config';
 import {TeamsConfig} from './teams/teams-config';
 import {MainDashboardConfig} from './dashboard/main-dashboard-config';
+import {OrganizationsConfig} from './organizations/organizations-config';
 
 let initModule = angular.module('codenvyDashboard', ['ngAnimate', 'ngCookies', 'ngTouch', 'ngSanitize', 'braintree-angular', 'gavruk.card',
   'ngResource', 'ngRoute', 'ngPasswordStrength', 'ui.codemirror', 'ui.gravatar', 'userDashboard', 'ngMessages']);
@@ -242,6 +243,7 @@ angular.module('ui.gravatar').config(['gravatarServiceProvider', (gravatarServic
 
 
 var instanceRegister = new Register(initModule);
+new OrganizationsConfig(instanceRegister);
 new MainDashboardConfig(instanceRegister);
 new BillingConfig(instanceRegister);
 new CodenvyNavbarConfig(instanceRegister);

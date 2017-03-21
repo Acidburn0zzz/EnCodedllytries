@@ -16,18 +16,19 @@
 import {CodenvyOrganizationActions} from './codenvy-organization-actions';
 
 /**
- * This is enum of team roles.
+ * This is enum of organization roles.
  *
- * @author Ann Shumilova
+ * @author Oleksii Orel
  */
-export enum CodenvyTeamRoles {
-  TEAM_MEMBER = <any> {
-    'title': 'Team Developer',
-    'description': 'Can create and use own workspaces.',
+export enum CodenvyOrganizationRoles {
+  MEMBER = <any> {
+    'title': 'Member',
+    'description': 'Can create workspaces in organization and use resources.',
     'actions': [CodenvyOrganizationActions.CREATE_WORKSPACES]
   },
-  TEAM_ADMIN = <any> {
-    'title': 'Team Admin', 'description': 'Can edit the team’s settings, manage workspaces and members.',
+  ADMIN = <any> {
+    'title': 'Admin',
+    'description': 'Can edit the organization’s settings, manage members and sub-organizations.',
     'actions': [
       CodenvyOrganizationActions.UPDATE,
       CodenvyOrganizationActions.SET_PERMISSIONS,
@@ -39,8 +40,8 @@ export enum CodenvyTeamRoles {
   }
 }
 
-export namespace CodenvyTeamRoles {
-  export function getValues(): any[] {
-    return [CodenvyTeamRoles.TEAM_MEMBER, CodenvyTeamRoles.TEAM_ADMIN];
+export namespace CodenvyOrganizationRoles {
+  export function getValues(): Array<any> {
+    return [CodenvyOrganizationRoles.MEMBER, CodenvyOrganizationRoles.ADMIN];
   }
 }

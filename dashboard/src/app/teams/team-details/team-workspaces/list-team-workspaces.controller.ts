@@ -120,7 +120,7 @@ export class ListTeamWorkspacesController {
     if (!this.team) {
       return;
     }
-    this.codenvyPermissions.fetchTeamPermissions(this.team.id).then(() => {
+    this.codenvyPermissions.fetchOrganizationPermissions(this.team.id).then(() => {
       this.processPermissions();
     }, (error: any) => {
       if (error.status === 304) {
@@ -132,7 +132,7 @@ export class ListTeamWorkspacesController {
   }
 
   processPermissions(): void {
-    let permissions = this.codenvyPermissions.getTeamPermissions(this.team.id);
+    let permissions = this.codenvyPermissions.getOrganizationPermissions(this.team.id);
     let currentUserPermissions = this.lodash.find(permissions, (permission: any) => {
       return permission.userId === this.cheUser.getUser().id;
     });

@@ -23,20 +23,23 @@ import {CodenvyTeamEventsManager} from './codenvy-team-events-manager.factory';
 import {CodenvyResourcesDistribution} from './codenvy-resources-distribution.factory';
 import {CodenvyAPIBuilder} from './builder/codenvy-api-builder.factory';
 import {CodenvyHttpBackendFactory} from './test/codenvy-http-backend.factory';
-import {CodenvyHttpBackendProviderFactory} from './test/codenvy-http-backend-provider.factory'
+import {CodenvyHttpBackendProviderFactory} from './test/codenvy-http-backend-provider.factory';
 import {CodenvyPayment} from './codenvy-payment.factory';
 import {CodenvyInvoices} from './codenvy-invoices.factory';
 import {CodenvySubscription} from './codenvy-subscription.factory';
 import {CodenvyInvite} from './codenvy-invite.factory';
+import {CodenvyOrganization} from './codenvy-organizations.factory';
+
 
 export class CodenvyApiConfig {
 
-  constructor(register) {
+  constructor(register: che.IRegisterService) {
     register.app.constant('clientTokenPath', '/'); // is necessary for Braintree
     register.factory('codenvyPermissions', CodenvyPermissions);
     register.factory('codenvyLicense', CodenvyLicense);
     register.factory('codenvySystem', CodenvySystem);
     register.factory('codenvyTeam', CodenvyTeam);
+    register.factory('codenvyOrganization', CodenvyOrganization);
     register.factory('codenvyTeamEventsManager', CodenvyTeamEventsManager);
     register.factory('codenvyAPI', CodenvyAPI);
     register.factory('codenvyAPIBuilder', CodenvyAPIBuilder);

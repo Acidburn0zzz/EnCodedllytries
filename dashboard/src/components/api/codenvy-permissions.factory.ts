@@ -21,16 +21,8 @@ interface ICodenvyPermissionsResource<T> extends ng.resource.IResourceClass<T> {
   getPermissionsByInstance: any;
 }
 
-interface IUserServices {
-  hasUserService: boolean;
-  hasUserProfileService: boolean;
-  hasAdminUserService: boolean;
-  hasInstallationManagerService: boolean;
-  hasLicenseService: boolean;
-}
-
 interface ISystemPermissions {
-  actions: any;
+  actions: Array<string>;
 }
 
 /**
@@ -56,17 +48,17 @@ export class CodenvyPermissions {
    */
   private workspacePermissions: Map<string, any>;
   /**
-   * Team permissions with team's id as a key.
+   * Team permissions with organization's id as a key.
    */
-  private teamPermissions: Map<string, any>;
+  private organizationPermissions: Map<string, any>;
   /**
    * Available system permissions.
    */
-  private systemPermissions: any;
+  private systemPermissions: ISystemPermissions;
   /**
    * Client to make remote permissions API calls.
    */
-  private remotePermissionsAPI: ng.resource.IResourceClass<ng.resource.IResource<any>>;
+  private remotePermissionsAPI: ICodenvyPermissionsResource<any>;
 
   /**
    * Default constructor that is using resource
@@ -77,7 +69,7 @@ export class CodenvyPermissions {
     this.$resource = $resource;
 
     this.workspacePermissions = new Map();
-    this.teamPermissions = new Map();
+    this.organizationPermissions = new Map();
     this.systemPermissions = null;
 
     this.userServices = {
@@ -107,39 +99,45 @@ export class CodenvyPermissions {
   }
 
   /**
-   * Fetch team permissions by team's id.
+   * Fetch organization permissions by organizations's id.
    *
-   * @param teamId team id
+   * @param organizationId organization id
    * @returns {ng.IPromise<any>}
    */
-  fetchTeamPermissions(teamId: string): ng.IPromise<any> {
-    let promise = this.remotePermissionsAPI.getPermissionsByInstance({domain: 'organization', instance: teamId}).$promise;
-    let resultPromise = promise.then((permissions) => {
-      this.teamPermissions.set(teamId, permissions);
+  fetchOrganizationPermissions(organizationId: string): ng.IPromise<any> {
+    let promise = this.remotePermissionsAPI.getPermissionsByInstance({domain: 'organization', instance: organizationId}).$promise;
+    let resultPromise = promise.then((permissions: any) => {
+      this.organizationPermissions.set(organizationId, permissions);
+      return permissions;
+    }, (error: any) => {
+      if (error.status === 304) {
+        return this.organizationPermissions.get(organizationId);
+      }
+      return this.$q.reject();
     });
 
     return resultPromise;
   }
 
   /**
-   * Returns the list of team's permissions by team's id
+   * Returns the list of organization's permissions by organization's id
    *
-   * @param teamId team id
-   * @returns {*} list of team permissions
+   * @param organizationId organization id
+   * @returns {*} list of organization permissions
    */
-  getTeamPermissions(teamId: string): any {
-    return this.teamPermissions.get(teamId);
+  getOrganizationPermissions(organizationId: string): any {
+    return this.organizationPermissions.get(organizationId);
   }
 
   /**
-   * Remove permissions for pointed user in pointed team.
+   * Remove permissions for pointed user in pointed organization.
    *
-   * @param teamId team id
+   * @param organizationId organization id
    * @param userId user id
    * @returns {ng.IPromise<any>} request promise
    */
-  removeTeamPermissions(teamId: string, userId: string): ng.IPromise<any> {
-    let promise = this.remotePermissionsAPI.remove({domain: 'organization', instance: teamId, user: userId}).$promise;
+  removeOrganizationPermissions(organizationId: string, userId: string): ng.IPromise<any> {
+    let promise = this.remotePermissionsAPI.remove({domain: 'organization', instance: organizationId, user: userId}).$promise;
     return promise;
   }
 
@@ -201,6 +199,14 @@ export class CodenvyPermissions {
     return promise;
   }
 
+  getSystemPermissions(): ISystemPermissions {
+    return this.systemPermissions;
+  }
+
+  getUserServices(): codenvy.IUserServices {
+    return this.userServices;
+  }
+
   private updateUserServices(systemPermissions: ISystemPermissions): void {
     let isManageUsers: boolean = systemPermissions && systemPermissions.actions.includes('manageUsers');
     let isManageSystem: boolean = systemPermissions && systemPermissions.actions.includes('manageSystem');
@@ -210,13 +216,5 @@ export class CodenvyPermissions {
     this.userServices.hasAdminUserService = isManageUsers;
     this.userServices.hasInstallationManagerService = isManageSystem;
     this.userServices.hasLicenseService = isManageSystem;
-  }
-
-  getSystemPermissions(): ISystemPermissions {
-    return this.systemPermissions;
-  }
-
-  getUserServices(): IUserServices {
-    return this.userServices;
   }
 }

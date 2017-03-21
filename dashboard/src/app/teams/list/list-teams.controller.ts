@@ -32,10 +32,6 @@ export class ListTeamsController {
    */
   private codenvyTeam: CodenvyTeam;
   /**
-   * Team events manager.
-   */
-  private codenvyTeamEventsManager: CodenvyTeamEventsManager;
-  /**
    * Permissions API interaction.
    */
   private codenvyPermissions: CodenvyPermissions;
@@ -51,7 +47,7 @@ export class ListTeamsController {
    * Service for displaying dialogs.
    */
   private confirmDialogService: any;
-   /**
+  /**
    * Promises service.
    */
   private $q: ng.IQService;
@@ -101,7 +97,6 @@ export class ListTeamsController {
               $q: ng.IQService, $location: ng.ILocationService) {
     this.codenvyTeam = codenvyTeam;
     this.codenvyPermissions = codenvyPermissions;
-    this.codenvyTeamEventsManager = codenvyTeamEventsManager;
     this.codenvyResourcesDistribution = codenvyResourcesDistribution;
 
     this.cheNotification = cheNotification;
@@ -122,12 +117,12 @@ export class ListTeamsController {
       this.fetchTeams();
     };
 
-    this.codenvyTeamEventsManager.addDeleteHandler(refreshHandler);
-    this.codenvyTeamEventsManager.addRenameHandler(refreshHandler);
+    codenvyTeamEventsManager.addDeleteHandler(refreshHandler);
+    codenvyTeamEventsManager.addRenameHandler(refreshHandler);
 
     $scope.$on('$destroy', () => {
-      this.codenvyTeamEventsManager.removeRenameHandler(refreshHandler);
-      this.codenvyTeamEventsManager.removeDeleteHandler(refreshHandler);
+      codenvyTeamEventsManager.removeRenameHandler(refreshHandler);
+      codenvyTeamEventsManager.removeDeleteHandler(refreshHandler);
     });
   }
 
@@ -141,12 +136,8 @@ export class ListTeamsController {
       this.processTeams();
     }, (error: any) => {
       this.isLoading = false;
-      if (error.status === 304) {
-        this.processTeams();
-      } else {
-        let message = error.data && error.data.message ? error.data.message : 'Failed to retrieve teams.';
-        this.cheNotification.showError(message);
-      }
+      let message = error.data && error.data.message ? error.data.message : 'Failed to retrieve teams.';
+      this.cheNotification.showError(message);
     });
   }
 
@@ -160,16 +151,16 @@ export class ListTeamsController {
 
     let promises = [];
     this.teams.forEach((team: any) => {
-      let promiseMembers = this.codenvyPermissions.fetchTeamPermissions(team.id).then(() => {
-        this.teamMembers.set(team.id, this.codenvyPermissions.getTeamPermissions(team.id).length);
+      let promiseMembers = this.codenvyPermissions.fetchOrganizationPermissions(team.id).then(() => {
+        this.teamMembers.set(team.id, this.codenvyPermissions.getOrganizationPermissions(team.id).length);
       }, (error: any) => {
         if (error.status === 304) {
-          this.teamMembers.set(team.id, this.codenvyPermissions.getTeamPermissions(team.id).length);
+          this.teamMembers.set(team.id, this.codenvyPermissions.getOrganizationPermissions(team.id).length);
         }
       });
       promises.push(promiseMembers);
 
-      let promiseResource = this.codenvyResourcesDistribution.fetchTeamResources(team.id).then(() => {
+      let promiseResource = this.codenvyResourcesDistribution.fetchOrganizationResources(team.id).then(() => {
         this.processResource(team.id);
       }, (error: any) => {
         if (error.status === 304) {
@@ -191,7 +182,7 @@ export class ListTeamsController {
    * @param teamId team's id
    */
   processResource(teamId: string): void {
-    let ramLimit = this.codenvyResourcesDistribution.getTeamResourceByType(teamId, CodenvyResourceLimits.RAM);
+    let ramLimit = this.codenvyResourcesDistribution.getOrganizationResourceByType(teamId, CodenvyResourceLimits.RAM);
     this.teamResources.set(teamId, ramLimit ? ramLimit.amount : undefined);
   }
 

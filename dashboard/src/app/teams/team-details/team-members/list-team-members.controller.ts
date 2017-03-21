@@ -177,7 +177,7 @@ export class ListTeamMembersController {
    * Fetches the list of team members.
    */
   fetchMembers(): void {
-    this.codenvyPermissions.fetchTeamPermissions(this.team.id).then(() => {
+    this.codenvyPermissions.fetchOrganizationPermissions(this.team.id).then(() => {
       this.isLoading = false;
       this.formUserList();
     }, (error: any) => {
@@ -194,7 +194,7 @@ export class ListTeamMembersController {
    * Combines permissions and users data in one list.
    */
   formUserList(): void {
-    let permissions = this.codenvyPermissions.getTeamPermissions(this.team.id);
+    let permissions = this.codenvyPermissions.getOrganizationPermissions(this.team.id);
 
     let noOwnerPermissions = true;
 
@@ -516,11 +516,11 @@ export class ListTeamMembersController {
 
         deleteMember = true;
         if (id === this.cheUser.getUser().id) {
-          currentUserPromise = this.codenvyPermissions.removeTeamPermissions(this.team.id, id);
+          currentUserPromise = this.codenvyPermissions.removeOrganizationPermissions(this.team.id, id);
           continue;
         }
 
-        let promise = this.codenvyPermissions.removeTeamPermissions(this.team.id, id).then(() => {
+        let promise = this.codenvyPermissions.removeOrganizationPermissions(this.team.id, id).then(() => {
             ng.noop();
           },
           (error: any) => {
@@ -575,7 +575,7 @@ export class ListTeamMembersController {
    */
   removePermissions(user: any) {
     this.isLoading = true;
-    this.codenvyPermissions.removeTeamPermissions(user.permissions.instanceId, user.userId).then(() => {
+    this.codenvyPermissions.removeOrganizationPermissions(user.permissions.instanceId, user.userId).then(() => {
       if (user.userId === this.cheUser.getUser().id) {
         this.processCurrentUserRemoval();
       } else {
