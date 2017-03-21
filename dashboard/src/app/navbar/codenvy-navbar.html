@@ -83,10 +83,19 @@
                 </div>
               </md-button>
             </md-list-item>
+            <md-list-item flex class="navbar-subsection-item" ng-if="!codenvyNavbarController.userServices.hasAdminUserService && !codenvyNavbarController.personalAccount">
+              <md-button nav-bar-selected flex che-reload-href
+                         href="{{codenvyNavbarController.menuItemUrl.organizations}}" layout-align="left">
+                <div class="navbar-item" layout="row" layout-align="start center">
+                  <md-icon md-font-icon="fa navbar-icon fa-sitemap"></md-icon>
+                  <span>Organizations</span>
+                  <span class="navbar-number" ng-show="codenvyNavbarController.getRootOrganizationsNumber()">&nbsp;({{codenvyNavbarController.getRootOrganizationsNumber()}})</span>
+                </div>
+              </md-button>
+            </md-list-item>
           </md-list>
         </section>
       </div>
-
       <div class="admin-navbar-menu"
            ng-if="codenvyNavbarController.userServices.hasInstallationManagerService || codenvyNavbarController.userServices.hasAdminUserService">
         <section class="left-sidebar-menu" layout="column" layout-align="start start">
@@ -95,19 +104,7 @@
                flex layout="row" layout-align="start start">
             <span flex class="navbar-section-title">Administration</span>
           </div>
-
           <md-list layout="column">
-            <md-list-item flex class="navbar-subsection-item"
-                          ng-if="codenvyNavbarController.userServices.hasInstallationManagerService">
-              <md-button nav-bar-selected flex che-reload-href
-                         href="{{codenvyNavbarController.menuItemUrl.administration}}"
-                         layout-align="left">
-                <div class="navbar-item" layout="row" layout-align="start center">
-                  <i class="fa fa-cog navbar-icon" aria-hidden="true"></i>
-                  <span>Settings</span>
-                </div>
-              </md-button>
-            </md-list-item>
             <md-list-item flex class="navbar-subsection-item"
                           ng-if="codenvyNavbarController.userServices.hasAdminUserService">
               <md-button nav-bar-selected flex che-reload-href
@@ -116,6 +113,27 @@
                 <div class="navbar-item" layout="row" layout-align="start center">
                   <i class="fa fa-user fa-lg navbar-icon"></i>
                   <span>Users</span>
+                </div>
+              </md-button>
+            </md-list-item>
+            <md-list-item flex class="navbar-subsection-item" ng-if="codenvyNavbarController.userServices.hasAdminUserService">
+              <md-button nav-bar-selected flex che-reload-href
+                         href="{{codenvyNavbarController.menuItemUrl.organizations}}" layout-align="left">
+                <div class="navbar-item" layout="row" layout-align="start center">
+                  <md-icon md-font-icon="fa navbar-icon fa-sitemap"></md-icon>
+                  <span>Organizations</span>
+                  <span class="navbar-number" ng-show="codenvyNavbarController.getRootOrganizationsNumber()">&nbsp;({{codenvyNavbarController.getRootOrganizationsNumber()}})</span>
+                </div>
+              </md-button>
+            </md-list-item>
+            <md-list-item flex class="navbar-subsection-item"
+                          ng-if="codenvyNavbarController.userServices.hasInstallationManagerService">
+              <md-button nav-bar-selected flex che-reload-href
+                         href="{{codenvyNavbarController.menuItemUrl.administration}}"
+                         layout-align="left">
+                <div class="navbar-item" layout="row" layout-align="start center">
+                  <i class="fa fa-cog navbar-icon" aria-hidden="true"></i>
+                  <span>Settings</span>
                 </div>
               </md-button>
             </md-list-item>

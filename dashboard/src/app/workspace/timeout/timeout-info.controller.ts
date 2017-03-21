@@ -59,6 +59,9 @@ export class TimeoutInfoController {
 
   /**
    * Fetches the team's details by it's name.
+   *
+   * @param name {string}
+   *
    */
   fetchTeamDetails(name: string): void {
     this.team  = this.codenvyTeam.getTeamByName(name);
@@ -81,11 +84,11 @@ export class TimeoutInfoController {
    * Fetches team's available resources to process timeout.
    */
   fetchTimeoutValue(): void {
-    this.codenvyResourcesDistribution.fetchAvailableTeamResources(this.team.id).then(() => {
-      this.processTimeoutValue(this.codenvyResourcesDistribution.getAvailableTeamResources(this.team.id));
+    this.codenvyResourcesDistribution.fetchAvailableOrganizationResources(this.team.id).then(() => {
+      this.processTimeoutValue(this.codenvyResourcesDistribution.getAvailableOrganizationResources(this.team.id));
     }, (error: any) => {
       if (error.status === 304) {
-        this.processTimeoutValue(this.codenvyResourcesDistribution.getAvailableTeamResources(this.team.id));
+        this.processTimeoutValue(this.codenvyResourcesDistribution.getAvailableOrganizationResources(this.team.id));
       }
     });
   }
@@ -93,7 +96,7 @@ export class TimeoutInfoController {
   /**
    * Process resources to find timeout resource's value.
    *
-   * @param resources
+   * @param resources {Array<any>}
    */
   processTimeoutValue(resources: Array<any>): void {
     if (!resources || resources.length === 0) {
@@ -177,13 +180,13 @@ export class TimeoutInfoController {
 
     this.totalRAM = this.getRamValue(license.totalResources);
 
-    this.codenvyResourcesDistribution.fetchAvailableTeamResources(this.accountId).then(() => {
-      let resources = this.codenvyResourcesDistribution.getAvailableTeamResources(this.accountId);
+    this.codenvyResourcesDistribution.fetchAvailableOrganizationResources(this.accountId).then(() => {
+      let resources = this.codenvyResourcesDistribution.getAvailableOrganizationResources(this.accountId);
       this.usedRAM = this.totalRAM - this.getRamValue(resources);
       this.getMoreRAM();
     }, (error: any) => {
       if (error.status === 304) {
-        let resources = this.codenvyResourcesDistribution.getAvailableTeamResources(this.accountId);
+        let resources = this.codenvyResourcesDistribution.getAvailableOrganizationResources(this.accountId);
         this.usedRAM = this.totalRAM - this.getRamValue(resources);
         this.getMoreRAM();
       }

@@ -18,7 +18,7 @@
             <div ng-message="customValidator">{{memberDialogController.emailError}}</div>
           </che-input-box>
       </che-label-container>
-      <che-label-container che-label-name="Role" che-label-description="Allowed actions of team member." ng-if="!memberDialogController.role">
+      <che-label-container che-label-name="Role" che-label-description="Allowed actions of member." ng-if="!memberDialogController.role">
         <div layout="column">
           <md-radio-group ng-model="memberDialogController.newRole">
             <div ng-repeat="roleInfo in memberDialogController.roles" layout="row">

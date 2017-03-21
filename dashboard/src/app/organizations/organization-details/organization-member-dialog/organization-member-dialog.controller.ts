@@ -13,24 +13,25 @@
  * from Codenvy S.A..
  */
 'use strict';
-import {CodenvyTeam} from '../../../components/api/codenvy-team.factory';
-import {CodenvyTeamRoles} from '../../../components/api/codenvy-team-roles';
+import {CodenvyUser} from '../../../../components/api/codenvy-user.factory';
+import {CodenvyOrganizationRoles} from '../../../../components/api/codenvy-organization-roles';
+import {CodenvyOrganization} from '../../../../components/api/codenvy-organizations.factory';
 
 /**
  * @ngdoc controller
- * @name teams.member:MemberDialogController
- * @description This class is handling the controller for adding/editing members dialog.
- * @author Ann Shumilova
+ * @name organization.details.member:MemberDialogController
+ * @description This class is handling the controller for adding/editing organization member dialog.
+ * @author Oleksii Orel
  */
-export class MemberDialogController {
-  /**
-   * Team API interaction.
-   */
-  private codenvyTeam: CodenvyTeam;
+export class OrganizationMemberDialogController {
   /**
    * User API interaction.
    */
-  private cheUser: any;
+  private codenvyUser: CodenvyUser;
+  /**
+   * Organization API interaction.
+   */
+  private codenvyOrganization: CodenvyOrganization;
   /**
    * Service for displaying dialogs.
    */
@@ -67,11 +68,10 @@ export class MemberDialogController {
    * Controller that will handle callbacks.
    */
   private callbackController: any;
-
   /**
    * Member to be displayed, may be <code>null</code> if add new member is needed. (Comes from outside)
    */
-  private member: any;
+  private member: codenvy.IMember;
   /**
    * Role to be used, may be <code>null</code> if role is needed to be set. (Comes from outside)
    */
@@ -97,17 +97,17 @@ export class MemberDialogController {
    * Default constructor that is using resource
    * @ngInject for Dependency injection
    */
-  constructor($mdDialog: angular.material.IDialogService, codenvyTeam: CodenvyTeam, cheUser: any, $q: ng.IQService, lodash: any) {
+  constructor($q: ng.IQService, $mdDialog: angular.material.IDialogService, codenvyUser: CodenvyUser, codenvyOrganization: CodenvyOrganization, lodash: any) {
     this.$mdDialog = $mdDialog;
-    this.codenvyTeam = codenvyTeam;
-    this.cheUser = cheUser;
+    this.codenvyUser = codenvyUser;
+    this.codenvyOrganization = codenvyOrganization;
     this.$q = $q;
     this.lodash = lodash;
 
     this.isProcessing = false;
 
     this.emails = [];
-    this.members.forEach((member: any) => {
+    this.members.forEach((member: codenvy.IMember) => {
       this.emails.push(member.email);
     });
 
@@ -119,18 +119,18 @@ export class MemberDialogController {
       return;
     }
 
-    this.roles = CodenvyTeamRoles.getValues();
+    this.roles = CodenvyOrganizationRoles.getValues();
     if (this.member) {
       this.title = 'Edit ' + this.member.name + ' roles';
       this.buttonTitle = 'Save';
       this.email = this.member.email;
-      let roles = this.codenvyTeam.getRolesFromActions(this.member.permissions.actions);
-      this.newRole = (roles && roles.length > 0) ? angular.toJson(roles[0]) : angular.toJson(CodenvyTeamRoles.TEAM_MEMBER);
+      let roles = codenvyOrganization.getRolesFromActions(this.member.permissions.actions);
+      this.newRole = (roles && roles.length > 0) ? angular.toJson(roles[0]) : angular.toJson(CodenvyOrganizationRoles.MEMBER);
     } else {
       this.email = '';
       this.title = 'Invite member to collaborate';
       this.buttonTitle = 'Add';
-      this.newRole = angular.toJson(CodenvyTeamRoles.TEAM_MEMBER);
+      this.newRole = angular.toJson(CodenvyOrganizationRoles.MEMBER);
     }
   }
 
@@ -148,7 +148,6 @@ export class MemberDialogController {
    * @returns {boolean} true if pointed email(s) are valid and not in the list yet
    */
   isValidEmail(value: string): boolean {
-    // return this.emails.indexOf(email) < 0;
     let emails = value.replace(/ /g, ',').split(',');
     for (let i = 0; i < emails.length; i++) {
       let email = emails[i];
@@ -170,9 +169,7 @@ export class MemberDialogController {
    * Adds new member.
    */
   addMembers(): void {
-    let userRoles =  this.role ? [this.role] : [angular.fromJson(this.newRole)];
-
-
+    let userRoles = this.role ? [this.role] : [angular.fromJson(this.newRole)];
     let emails = this.email.replace(/ /g, ',').split(',');
     // form the list of emails without duplicates and empty values:
     let resultEmails = emails.reduce((array: Array<string>, element: string) => {
@@ -193,21 +190,19 @@ export class MemberDialogController {
     });
   }
 
-  processUser(email: string, users : Array<any>): ng.IPromise<any> {
+  processUser(email: string, users: Array<any>): ng.IPromise<any> {
     let deferred = this.$q.defer();
-    let user = this.cheUser.getUserByAlias(email);
+    let user = this.codenvyUser.getUserByAlias(email);
     if (user) {
       users.push(user);
       deferred.resolve();
     } else {
-      user = {};
-      user.email = email;
       this.isProcessing = true;
-      this.cheUser.fetchUserByAlias(email).then(() => {
-        users.push(this.cheUser.getUserByAlias(email));
+      this.codenvyUser.fetchUserByAlias(email).then(() => {
+        users.push(this.codenvyUser.getUserByAlias(email));
         deferred.resolve();
       }, (error: any) => {
-        users.push(user);
+        users.push({email: email});
         deferred.resolve();
       });
     }
@@ -233,11 +228,25 @@ export class MemberDialogController {
       processedActions = processedActions.concat(role.actions);
     });
 
-
     let actions = this.member ? this.member.permissions.actions : [];
     let otherActions = this.lodash.difference(actions, processedActions);
 
-    return this.lodash.uniq(this.codenvyTeam.getActionsFromRoles(userRoles).concat(otherActions));
+    return this.lodash.uniq(this.getActionsFromRoles(userRoles).concat(otherActions));
+  }
+
+  /**
+   * Forms the list actions based on the list of roles.
+   *
+   * @param roles array of roles
+   * @returns {Array<string>} actions array
+   */
+  getActionsFromRoles(roles: Array<any>): Array<string> {
+    let actions = [];
+    roles.forEach((role: any) => {
+      actions = actions.concat(role.actions);
+    });
+
+    return actions;
   }
 
   /**

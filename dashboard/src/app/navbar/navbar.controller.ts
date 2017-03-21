@@ -16,14 +16,6 @@
 import {CodenvyAPI} from '../../components/api/codenvy-api.factory';
 import {CodenvyPermissions} from '../../components/api/codenvy-permissions.factory';
 
-interface IUserServices {
-  hasUserService: boolean;
-  hasUserProfileService: boolean;
-  hasAdminUserService: boolean;
-  hasInstallationManagerService: boolean;
-  hasLicenseService: boolean;
-}
-
 export class CodenvyNavBarController {
   menuItemUrl = {
     login: '/site/login',
@@ -32,9 +24,8 @@ export class CodenvyNavBarController {
     stacks: '#/stacks',
     factories: '#/factories',
     administration: '#/onprem/administration',
-    usermanagement: '#/admin/usermanagement',
-    // subsection
-    plugins: '#/admin/plugins'
+    organizations: '#/organizations',
+    usermanagement: '#/admin/usermanagement'
   };
   // account dropdown items
   accountItems = [
@@ -57,9 +48,7 @@ export class CodenvyNavBarController {
     name: 'New Workspace'
   }];
   displayLoginItem: boolean;
-  onpremAdminExpanded: boolean;
   isFactoryServiceAvailable: boolean;
-  isBillingServiceAvailable: boolean;
 
   private $scope: ng.IScope;
   private $window: ng.IWindowService;
@@ -69,7 +58,7 @@ export class CodenvyNavBarController {
   private $cookies: ng.cookies.ICookiesService;
   private $resource: ng.resource.IResourceService;
   private $mdSidenav: ng.material.ISidenavService;
-  private userServices: IUserServices;
+  private userServices: codenvy.IUserServices;
   private codenvyAPI: CodenvyAPI;
   private cheFactory: any;
   private codenvyPermissions: CodenvyPermissions;
@@ -77,6 +66,7 @@ export class CodenvyNavBarController {
   private profile: any;
   private logoutAPI: any;
   private email: string;
+  private personalAccount: any;
 
   /**
    * Default constructor
@@ -99,11 +89,6 @@ export class CodenvyNavBarController {
     this.$resource = $resource;
     this.$cookies = $cookies;
     this.logoutAPI = this.$resource('/api/auth/logout', {});
-
-    this.userServices = this.codenvyPermissions.getUserServices();
-    if (!this.codenvyPermissions.getSystemPermissions()) {
-      this.codenvyPermissions.fetchSystemPermissions();
-    }
 
     this.displayLoginItem = userDashboardConfig.developmentMode;
     let promiseService = this.cheAPI.getService().fetchServices();
@@ -128,7 +113,6 @@ export class CodenvyNavBarController {
         this.email = 'N/A ';
       });
     }
-    this.onpremAdminExpanded = true;
 
 
     // highlight navbar menu item
@@ -154,6 +138,30 @@ export class CodenvyNavBarController {
     });
 
     cheAPI.cheWorkspace.fetchWorkspaces();
+    this.userServices = this.codenvyPermissions.getUserServices();
+    if (this.codenvyPermissions.getSystemPermissions()) {
+      this.updateData();
+    } else {
+      this.codenvyPermissions.fetchSystemPermissions().then(() => {
+        this.updateData();
+      });
+    }
+  }
+
+  /**
+   * Update data.
+   */
+  updateData(): void {
+    this.codenvyAPI.getOrganization().fetchOrganizations().then(() => {
+      let organizations = this.codenvyAPI.getOrganization().getOrganizations();
+      if (organizations) {
+        let user = this.codenvyUser.getUser();
+        this.personalAccount = organizations.find((organization: any) => {
+          return organization.qualifiedName === user.name;
+        });
+      }
+    });
+
   }
 
   reload(): void {
@@ -167,17 +175,40 @@ export class CodenvyNavBarController {
     this.$mdSidenav('left').toggle();
   }
 
+  /**
+   * Returns number of workspaces.
+   *
+   * @return {number}
+   */
   getWorkspacesNumber(): number {
     return this.cheAPI.cheWorkspace.getWorkspaces().length;
   }
 
+  /**
+   * Returns number of factories.
+   *
+   * @return {number}
+   */
   getFactoriesNumber(): number {
     let pagesInfo = this.cheFactory.getPagesInfo();
     return pagesInfo && pagesInfo.count ? pagesInfo.count : this.cheFactory.factoriesById.size;
   }
 
-  openLinkInNewTab(url: string): void {
-    this.$window.open(url, '_blank');
+  /**
+   * Returns number of root organizations.
+   *
+   * @return {number}
+   */
+  getRootOrganizationsNumber(): number {
+    let organizations = this.codenvyAPI.getOrganization().getOrganizations();
+    if (!organizations) {
+      return 0;
+    }
+    let rootOrganizations = organizations.filter((organization: any) => {
+      return !organization.parent;
+    });
+
+    return rootOrganizations.length;
   }
 
   /**

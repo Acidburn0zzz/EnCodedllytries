@@ -82,12 +82,12 @@ export class RamInfoController {
 
     this.totalRAM = this.getRamValue(license.totalResources);
 
-    this.codenvyResourcesDistribution.fetchAvailableTeamResources(this.accountId).then(() => {
-      let resources = this.codenvyResourcesDistribution.getAvailableTeamResources(this.accountId);
+    this.codenvyResourcesDistribution.fetchAvailableOrganizationResources(this.accountId).then(() => {
+      let resources = this.codenvyResourcesDistribution.getAvailableOrganizationResources(this.accountId);
       this.usedRAM = this.totalRAM - this.getRamValue(resources);
     }, (error: any) => {
       if (error.status === 304) {
-        let resources = this.codenvyResourcesDistribution.getAvailableTeamResources(this.accountId);
+        let resources = this.codenvyResourcesDistribution.getAvailableOrganizationResources(this.accountId);
         this.usedRAM = this.totalRAM - this.getRamValue(resources);
       }
     });

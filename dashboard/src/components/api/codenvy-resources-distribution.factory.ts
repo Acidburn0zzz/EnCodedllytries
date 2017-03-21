@@ -26,7 +26,7 @@ interface ICodenvyResourcesResource<T> extends ng.resource.IResourceClass<T> {
 const RAM_RESOURCE_TYPE: string = 'RAM';
 
 /**
- * This class is handling the team's resources management API.
+ * This class is handling the organization's resources management API.
  *
  * @author Ann Shumilova
  */
@@ -48,17 +48,17 @@ export class CodenvyResourcesDistribution {
    */
   private remoteResourcesAPI: ICodenvyResourcesResource<any>;
   /**
-   * Team resources with team's id as a key.
+   * Organization resources with organization's id as a key.
    */
-  private teamResources: Map<string, any>;
+  private organizationResources: Map<string, any>;
   /**
-   * Team used resources with team's id as a key.
+   * Organization used resources with organization's id as a key.
    */
-  private teamUsedResources: Map<string, any>;
+  private organizationUsedResources: Map<string, any>;
   /**
-   * Team available resources with team's id as a key.
+   * Organization available resources with organization's id as a key.
    */
-  private teamAvailableResources: Map<string, any>;
+  private organizationAvailableResources: Map<string, any>;
 
   /**
    * Default constructor that is using resource
@@ -69,114 +69,120 @@ export class CodenvyResourcesDistribution {
     this.$resource = $resource;
     this.lodash = lodash;
 
-    this.teamResources = new Map();
-    this.teamUsedResources = new Map();
-    this.teamAvailableResources = new Map();
+    this.organizationResources = new Map();
+    this.organizationUsedResources = new Map();
+    this.organizationAvailableResources = new Map();
 
     this.remoteResourcesAPI = <ICodenvyResourcesResource<any>>this.$resource('/api/organization/resource', {}, {
-      distribute: {method: 'POST', url: '/api/organization/resource/:teamId/cap'},
-      getResources: {method: 'GET', url: '/api/organization/resource/:teamId/cap', isArray: true},
-      getUsedResources: {method: 'GET', url: '/api/resource/:teamId/used', isArray: true},
-      getAvailableResources: {method: 'GET', url: '/api/resource/:teamId/available', isArray: true}
+      distribute: {method: 'POST', url: '/api/organization/resource/:organizationId/cap'},
+      getResources: {method: 'GET', url: '/api/organization/resource/:organizationId/cap', isArray: true},
+      getUsedResources: {method: 'GET', url: '/api/resource/:organizationId/used', isArray: true},
+      getAvailableResources: {method: 'GET', url: '/api/resource/:organizationId/available', isArray: true}
     });
   }
 
   /**
-   * Distributes resources for pointed team.
+   * Distributes resources for pointed organization.
    *
-   * @param teamId id of team to distribute resources
+   * @param organizationId id of organization to distribute resources
    * @param resources resources to distribute
    * @returns {ng.IPromise<T>}
    */
-  distributeResources(teamId: string, resources: Array<any>): ng.IPromise<any> {
-     return this.remoteResourcesAPI.distribute({'teamId': teamId}, resources).$promise;
+  distributeResources(organizationId: string, resources: Array<any>): ng.IPromise<any> {
+     return this.remoteResourcesAPI.distribute({'organizationId': organizationId}, resources).$promise;
   }
 
   /**
-   * Fetch distributed resources by team's id.
+   * Fetch distributed resources by organization's id.
    *
-   * @param teamId team id
+   * @param organizationId organization id
    * @returns {ng.IPromise<any>}
    */
-  fetchTeamResources(teamId: string): ng.IPromise<any> {
-    let promise = this.remoteResourcesAPI.getResources({'teamId': teamId}).$promise;
-    let resultPromise = promise.then((resources) => {
-      this.teamResources.set(teamId, resources);
+  fetchOrganizationResources(organizationId: string): ng.IPromise<any> {
+    let promise = this.remoteResourcesAPI.getResources({'organizationId': organizationId}).$promise;
+    let resultPromise = promise.then((resources: any) => {
+      this.organizationResources.set(organizationId, resources);
+      return resources;
+    }, (error: any) => {
+      if (error.status === 304) {
+        return this.organizationResources.get(organizationId);
+      }
+      return this.$q.reject();
     });
 
     return resultPromise;
   }
 
   /**
-   * Returns the list of team's resources by team's id
+   * Returns the list of organization's resources by organization's id
    *
-   * @param teamId team id
-   * @returns {*} list of team resources
+   * @param organizationId organization id
+   * @returns {*} list of organization resources
    */
-  getTeamResources(teamId: string): any {
-    return this.teamResources.get(teamId);
+  getOrganizationResources(organizationId: string): any {
+    return this.organizationResources.get(organizationId);
   }
 
   /**
-   * Fetch used resources by team's id.
+   * Fetch used resources by organization's id.
    *
-   * @param teamId team id
+   * @param organizationId organization id
    * @returns {ng.IPromise<any>}
    */
-  fetchUsedTeamResources(teamId: string): ng.IPromise<any> {
-    let promise = this.remoteResourcesAPI.getUsedResources({'teamId': teamId}).$promise;
+  fetchUsedOrganizationResources(organizationId: string): ng.IPromise<any> {
+    let promise = this.remoteResourcesAPI.getUsedResources({'organizationId': organizationId}).$promise;
     let resultPromise = promise.then((resources: Array<any>) => {
-      this.teamUsedResources.set(teamId, resources);
+      this.organizationUsedResources.set(organizationId, resources);
     });
 
     return resultPromise;
   }
 
   /**
-   * Returns the list of team's used resources by team's id
+   * Returns the list of organization's used resources by organization's id
    *
-   * @param teamId team id
-   * @returns {*} list of team used resources
+   * @param organizationId organization id
+   * @returns {*} list of organization used resources
    */
-  getUsedTeamResources(teamId: string): any {
-    return this.teamUsedResources.get(teamId);
+  getUsedOrganizationResources(organizationId: string): any {
+    return this.organizationUsedResources.get(organizationId);
   }
 
   /**
-   * Fetch available resources by team's id.
+   * Fetch available resources by organization's id.
    *
-   * @param teamId team id
+   * @param organizationId organization id
    * @returns {ng.IPromise<any>}
    */
-  fetchAvailableTeamResources(teamId: string): ng.IPromise<any> {
-    let promise = this.remoteResourcesAPI.getAvailableResources({'teamId': teamId}).$promise;
+  fetchAvailableOrganizationResources(organizationId: string): ng.IPromise<any> {
+    let promise = this.remoteResourcesAPI.getAvailableResources({'organizationId': organizationId}).$promise;
     let resultPromise = promise.then((resources: Array<any>) => {
-      this.teamAvailableResources.set(teamId, resources);
+      this.organizationAvailableResources.set(organizationId, resources);
     });
 
     return resultPromise;
   }
 
   /**
-   * Returns the list of team's available resources by team's id
+   * Returns the list of organization's available resources by organization's id
    *
-   * @param teamId team id
-   * @returns {*} list of team used resources
+   * @param organizationId organization id
+   * @returns {*} list of organization used resources
    */
-  getAvailableTeamResources(teamId: string): any {
-    return this.teamAvailableResources.get(teamId);
+  getAvailableOrganizationResources(organizationId: string): any {
+    return this.organizationAvailableResources.get(organizationId);
   }
 
 
   /**
-   * Returns team's resource limits by resource type.
+   * Returns organization's resource limits by resource type.
    *
-   * @param teamId id of team
+   * @param organizationId id of organization
    * @param type type of resource
    * @returns {any} resource limit
    */
-  getTeamResourceByType(teamId: string, type: CodenvyResourceLimits): any {
-    let resources = this.teamResources.get(teamId);
+  getOrganizationResourceByType(organizationId: string, type: CodenvyResourceLimits): any {
+    let resources = this.organizationResources.get(organizationId);
     if (!resources) {
       return null;
     }
@@ -187,14 +193,14 @@ export class CodenvyResourcesDistribution {
   }
 
   /**
-   * Returns the modified team's resources with pointed type and value.
+   * Returns the modified organization's resources with pointed type and value.
    *
    * @param resources resources
    * @param type type of resource
    * @param value value to be set
    * @returns {any} modified
    */
-  setTeamResourceLimitByType(resources: any, type: CodenvyResourceLimits, value: string): any {
+  setOrganizationResourceLimitByType(resources: any, type: CodenvyResourceLimits, value: string): any {
     resources = resources || [];
 
 

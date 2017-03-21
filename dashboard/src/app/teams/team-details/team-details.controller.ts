@@ -195,7 +195,7 @@ export class TeamDetailsController {
    * Fetches permission of user in current team.
    */
   fetchUserPermissions(): void {
-    this.codenvyPermissions.fetchTeamPermissions(this.team.id).then(() => {
+    this.codenvyPermissions.fetchOrganizationPermissions(this.team.id).then(() => {
       this.allowedUserActions = this.processUserPermissions();
       this.fetchLimits();
     }, (error: any) => {
@@ -218,7 +218,7 @@ export class TeamDetailsController {
    */
   processUserPermissions(): Array<string> {
     let userId = this.cheUser.getUser().id;
-    let permissions = this.codenvyPermissions.getTeamPermissions(this.team.id);
+    let permissions = this.codenvyPermissions.getOrganizationPermissions(this.team.id);
     let userPermissions = this.lodash.find(permissions, (permission: any) => {
       return permission.userId === userId;
     });
@@ -258,7 +258,7 @@ export class TeamDetailsController {
    */
   fetchLimits(): void {
     this.isLoading = true;
-    this.codenvyResourcesDistribution.fetchTeamResources(this.team.id).then(() => {
+    this.codenvyResourcesDistribution.fetchOrganizationResources(this.team.id).then(() => {
       this.isLoading = false;
       this.processResources();
     }, (error: any) => {
@@ -276,9 +276,9 @@ export class TeamDetailsController {
    * Process resources limits.
    */
   processResources(): void {
-    let ramLimit = this.codenvyResourcesDistribution.getTeamResourceByType(this.team.id, CodenvyResourceLimits.RAM);
-    let workspaceLimit = this.codenvyResourcesDistribution.getTeamResourceByType(this.team.id, CodenvyResourceLimits.WORKSPACE);
-    let runtimeLimit = this.codenvyResourcesDistribution.getTeamResourceByType(this.team.id, CodenvyResourceLimits.RUNTIME);
+    let ramLimit = this.codenvyResourcesDistribution.getOrganizationResourceByType(this.team.id, CodenvyResourceLimits.RAM);
+    let workspaceLimit = this.codenvyResourcesDistribution.getOrganizationResourceByType(this.team.id, CodenvyResourceLimits.WORKSPACE);
+    let runtimeLimit = this.codenvyResourcesDistribution.getOrganizationResourceByType(this.team.id, CodenvyResourceLimits.RUNTIME);
 
     this.limits = {};
     this.limits.workspaceCap = workspaceLimit ? workspaceLimit.amount : undefined;
@@ -316,7 +316,7 @@ export class TeamDetailsController {
       'Would you like to leave team \'' + this.team.name + '\'?', 'Leave');
 
     promise.then(() => {
-      let promise = this.codenvyPermissions.removeTeamPermissions(this.team.id, this.cheUser.getUser().id);
+      let promise = this.codenvyPermissions.removeOrganizationPermissions(this.team.id, this.cheUser.getUser().id);
       promise.then(() => {
         this.$location.path('/');
         this.codenvyTeam.fetchTeams();
@@ -352,26 +352,24 @@ export class TeamDetailsController {
       return;
     }
 
-    let resources = this.codenvyResourcesDistribution.getTeamResources(this.team.id);
-
-    resources = angular.copy(resources);
+    let resources = angular.copy(this.codenvyResourcesDistribution.getOrganizationResources(this.team.id));
 
     let resourcesToRemove = [CodenvyResourceLimits.TIMEOUT];
 
     if (this.limits.ramCap !== null && this.limits.ramCap !== undefined) {
-      resources = this.codenvyResourcesDistribution.setTeamResourceLimitByType(resources, CodenvyResourceLimits.RAM, (this.limits.ramCap * 1024));
+      resources = this.codenvyResourcesDistribution.setOrganizationResourceLimitByType(resources, CodenvyResourceLimits.RAM, (this.limits.ramCap * 1024).toString());
     } else {
       resourcesToRemove.push(CodenvyResourceLimits.RAM);
     }
 
     if (this.limits.workspaceCap !== null && this.limits.workspaceCap !== undefined) {
-      resources = this.codenvyResourcesDistribution.setTeamResourceLimitByType(resources, CodenvyResourceLimits.WORKSPACE, this.limits.workspaceCap);
+      resources = this.codenvyResourcesDistribution.setOrganizationResourceLimitByType(resources, CodenvyResourceLimits.WORKSPACE, this.limits.workspaceCap);
     } else {
       resourcesToRemove.push(CodenvyResourceLimits.WORKSPACE);
     }
 
     if (this.limits.runtimeCap !== null && this.limits.runtimeCap !== undefined) {
-      resources = this.codenvyResourcesDistribution.setTeamResourceLimitByType(resources, CodenvyResourceLimits.RUNTIME, this.limits.runtimeCap);
+      resources = this.codenvyResourcesDistribution.setOrganizationResourceLimitByType(resources, CodenvyResourceLimits.RUNTIME, this.limits.runtimeCap);
     } else {
       resourcesToRemove.push(CodenvyResourceLimits.RUNTIME);
     }

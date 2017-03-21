@@ -56,11 +56,11 @@ export class UniqueTeamNameValidator {
       ngModel.$asyncValidators.uniqueTeamName = (modelValue: any) => {
 
         // parent scope ?
-        var scopingTest = $scope.$parent;
+        let scopingTest = $scope.$parent;
         if (!scopingTest) {
           scopingTest = $scope;
         }
-        var deferred = this.$q.defer();
+        let deferred = this.$q.defer();
         let currentTeamName = scopingTest.$eval(attributes.uniqueTeamName),
           parentAccount = scopingTest.$eval(attributes.parentAccount),
           teams = this.codenvyTeam.getTeams();
