@@ -169,6 +169,8 @@ export class CodenvyTeam {
     if (this.personalAccount) {
       // display personal account as "personal" on UI, namespace(id) stays the same for API interactions:
       this.cheNamespaceRegistry.getNamespaces().push({id: this.personalAccount.qualifiedName, label: 'personal', location: '/billing'});
+    } else {
+      this.cheNamespaceRegistry.getNamespaces().push({id: name, label: 'personal', location: null});
     }
 
     organizations.forEach((organization: codenvy.IOrganization) => {
@@ -178,12 +180,11 @@ export class CodenvyTeam {
         this.teams.push(organization);
         this.teamEventsManager.subscribeTeamNotifications(organization.id);
       }
-    });
 
-    this.teams.forEach((team : any) => {
-      // team has to have parent (root organizations are skipped):
-      if (team.parent) {
-        this.cheNamespaceRegistry.getNamespaces().push({id: team.qualifiedName, label: this.getTeamDisplayName(team), location: '/team/' + team.qualifiedName});
+      if (this.personalAccount && organization.id !== this.personalAccount.id) {
+        this.cheNamespaceRegistry.getNamespaces().push({id: organization.qualifiedName, label: organization.qualifiedName, location: '/team/' + organization.qualifiedName});
+      } else {
+        this.cheNamespaceRegistry.getNamespaces().push({id: organization.qualifiedName, label: organization.qualifiedName, location: '/organization/' + organization.qualifiedName});
       }
     });
   }
