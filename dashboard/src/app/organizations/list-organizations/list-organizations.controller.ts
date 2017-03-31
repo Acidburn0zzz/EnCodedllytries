@@ -141,8 +141,10 @@ export class ListOrganizationsController {
 
     $scope.$watch(() => {
       return this.organizations;
-    }, () => {
-      this.processOrganizations();
+    }, (newValue, oldValue) => {
+      if (newValue && !angular.equals(newValue, oldValue)) {
+        this.processOrganizations();
+      }
     });
     this.processOrganizations();
   }
