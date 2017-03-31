@@ -1,6 +1,6 @@
 <che-toolbar che-title="{{organizationDetailsController.organizationName}}"
-             che-breadcrumb-title="Organizations"
-             che-breadcrumb-href="#/organizations"
+             che-breadcrumb-title="{{organizationDetailsController.getBackButtonLink().title}}"
+             che-breadcrumb-href="{{organizationDetailsController.getBackButtonLink().link}}"
              ng-if="organizationDetailsController.organization">
   <div class="save-button-placeholder">
     <che-button-save-flat ng-show="organizationDetailsController.isSaveButtonVisible()"

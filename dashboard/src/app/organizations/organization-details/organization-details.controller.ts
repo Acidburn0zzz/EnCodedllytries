@@ -524,6 +524,20 @@ export class OrganizationDetailsController {
       !angular.equals(this.limits, this.limitsCopy) || !angular.equals(this.totalResources, this.totalResourcesCopy));
   }
 
+  /**
+   * Returns back button link and title.
+   *
+   * @returns {any} back button link
+   */
+  getBackButtonLink(): any {
+    if (this.organization && this.organization.parent) {
+      let parent = this.organization.qualifiedName.replace('/' + this.organization.name, '');
+      return {link: '#/organization/' + parent, title: parent};
+    } else {
+      return {link: '#/organizations', title: 'Organizations'};
+    }
+  }
+
   updateOrganization(): void {
     this.updateOrganizationName();
     this.updateLimits();
