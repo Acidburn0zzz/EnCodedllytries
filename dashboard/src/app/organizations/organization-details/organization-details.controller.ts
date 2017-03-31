@@ -18,7 +18,6 @@ import {CodenvyResourceLimits} from '../../../components/api/codenvy-resource-li
 import {CodenvyPermissions} from '../../../components/api/codenvy-permissions.factory';
 import {CodenvyUser} from '../../../components/api/codenvy-user.factory';
 import {CodenvyOrganization} from '../../../components/api/codenvy-organizations.factory';
-import {OrganizationsPermissionService} from '../organizations-permission.service';
 import {CodenvyOrganizationActions} from '../../../components/api/codenvy-organization-actions';
 
 enum Tab {Settings, Members, Organization}
@@ -119,7 +118,7 @@ export class OrganizationDetailsController {
   constructor(codenvyResourcesDistribution: CodenvyResourcesDistribution, codenvyPermissions: CodenvyPermissions,
               codenvyUser: CodenvyUser, $route: ng.route.IRouteService, $location: ng.ILocationService, $rootScope: che.IRootScopeService,
               $scope: ng.IScope, confirmDialogService: any, cheNotification: any,
-              lodash: any, codenvyOrganization: CodenvyOrganization) {
+              lodash: any, codenvyOrganization: CodenvyOrganization, organization: codenvy.IOrganization) {
     this.codenvyResourcesDistribution = codenvyResourcesDistribution;
     this.confirmDialogService = confirmDialogService;
     this.codenvyOrganization = codenvyOrganization;
@@ -129,6 +128,9 @@ export class OrganizationDetailsController {
     this.$location = $location;
     this.$route = $route;
     this.lodash = lodash;
+
+    // injected by router
+    this.organization = organization;
 
     $rootScope.showIDE = false;
 
@@ -162,25 +164,10 @@ export class OrganizationDetailsController {
   }
 
   /**
-   * Fetch organizations.
-   */
-  fetchOrganizations() {
-    this.codenvyOrganization.fetchOrganizations().then(() => {
-      this.updateData();
-    });
-  }
-
-  /**
    * Update data.
    */
   updateData(): void {
     this.organizationName = this.$route.current.params.organizationName;
-    if (!this.organizationName) {
-      return;
-    }
-    this.organization = this.lodash.find(this.codenvyOrganization.getOrganizations(), (organization: codenvy.IOrganization) => {
-      return organization.qualifiedName === this.organizationName;
-    });
     if (!this.organization) {
       return;
     }
@@ -190,12 +177,12 @@ export class OrganizationDetailsController {
     });
 
     if (this.isRootOrganization()) {
-      this.fetchTotalResources();
+      this.processTotalResources();
     } else {
-      this.fetchLimits();
+      this.processResources();
     }
 
-    this.fetchUserPermissions();
+    this.allowedUserActions = this.processUserPermissions();
   }
 
   /**
@@ -217,6 +204,9 @@ export class OrganizationDetailsController {
     if (!angular.isUndefined(tabIndex)) {
       param.tab = Tab[tabIndex];
     }
+    if (angular.isUndefined(this.$location.search().tab)) {
+      this.$location.replace();
+    }
     this.$location.search(param);
   }
 
@@ -227,17 +217,6 @@ export class OrganizationDetailsController {
    */
   getSubOrganizations(): Array<any> {
     return this.subOrganizations;
-  }
-
-  /**
-   * Fetches permission of user in current organization.
-   */
-  fetchUserPermissions(): void {
-    this.codenvyPermissions.fetchOrganizationPermissions(this.organization.id).then(() => {
-      this.allowedUserActions = this.processUserPermissions();
-    }, (error: any) => {
-      this.isLoading = false;
-    });
   }
 
   /**

@@ -25,8 +25,8 @@ import {ListOrganizationInviteMembersController} from './organization-details/or
 import {ListOrganizationInviteMembers} from './organization-details/organization-invite-members/list-organization-invite-members.directive';
 import {ListOrganizationMembers} from './organization-details/organization-members/list-organization-members.directive';
 import {OrganizationMemberDialogController} from './organization-details/organization-member-dialog/organization-member-dialog.controller';
-import {CodenvyOrganization} from '../../components/api/codenvy-organizations.factory';
 import {OrganizationsPermissionService} from './organizations-permission.service';
+import {OrganizationsConfigService} from './organizations-config.service';
 
 /**
  * The configuration of teams, defines controllers, directives and routing.
@@ -57,20 +57,37 @@ export class OrganizationsConfig {
     register.directive('listOrganizations', ListOrganizations);
 
     register.service('organizationsPermissionService', OrganizationsPermissionService);
+    register.service('organizationsConfigService', OrganizationsConfigService);
 
-    let fetchOrganization = ($q: ng.IQService, codenvyOrganization: CodenvyOrganization) => {
-      let defer = $q.defer();
-      codenvyOrganization.fetchOrganizations().then(() => {
-        defer.resolve();
-      }, (error: any) => {
-        // resolve it to show 'not found page' in case with error
-        defer.resolve();
-      });
-
-      return defer.promise;
+    const fetchOrganizations = (organizationsConfgiService: OrganizationsConfigService) => {
+      return organizationsConfgiService.fetchOrganizations();
     };
 
-    let organizationDetailsLocationProvider = {
+    const fetchOrganizationDetails = ($q: ng.IQService,
+                                      $route: ng.route.IRouteService,
+                                      organizationsConfigService: OrganizationsConfigService) => {
+      const name = $route.current.params.organizationName;
+
+      const organizationPromise = organizationsConfigService.getOrFetchOrganizationByName(name);
+
+      const permissionsPromise = organizationPromise.then((organization: codenvy.IOrganization) => {
+        return organizationsConfigService.getOrFetchOrganizationPermissions(organization.id);
+      });
+
+      const resourcesPromise = organizationPromise.then((organization: codenvy.IOrganization) => {
+        if (organization.parent) {
+          return organizationsConfigService.getOrFetchOrganizationResources(organization.id);
+        } else {
+          return organizationsConfigService.getOrFetchTotalOrganizationResources(organization.id);
+        }
+      });
+
+      return organizationsConfigService.waitAll([permissionsPromise, resourcesPromise]).then(() => {
+        return organizationPromise;
+      });
+    };
+
+    const organizationDetailsLocationProvider = {
       title: (params: any) => {
         return params.organizationName;
       },
@@ -79,17 +96,17 @@ export class OrganizationsConfig {
       controller: 'OrganizationDetailsController',
       controllerAs: 'organizationDetailsController',
       resolve: {
-        check: ['$q', 'codenvyOrganization', fetchOrganization]
+        organization: ['$q', '$route', 'organizationsConfigService', fetchOrganizationDetails],
       }
     };
 
-    let createOrganizationLocationProvider = {
+    const createOrganizationLocationProvider = {
       title: 'New Organization',
       templateUrl: 'app/organizations/create-organizations/create-organizations.html',
       controller: 'CreateOrganizationController',
       controllerAs: 'createOrganizationController',
       resolve: {
-        check: ['$q', 'codenvyOrganization', fetchOrganization]
+        organizations: ['organizationsConfigService', fetchOrganizations]
       }
     };
 

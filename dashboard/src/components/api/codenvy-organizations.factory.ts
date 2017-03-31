@@ -185,6 +185,13 @@ export class CodenvyOrganization {
     return this.organizationsMap.get(id);
   }
 
+  getOrganizationByName(name: string) {
+    return this.organizations.find((organization: codenvy.IOrganization) => {
+      return organization.qualifiedName === name;
+    });
+  }
+
+
   /**
    * Creates new organization with pointed name.
    *

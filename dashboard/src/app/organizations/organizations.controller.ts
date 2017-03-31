@@ -103,9 +103,9 @@ export class OrganizationsController {
   /**
    * Gets the list of organizations.
    *
-   * @returns {Array<any>}
+   * @returns {Array<codenvy.IOrganization>}
    */
-  getOrganizations(): Array<any> {
+  getOrganizations(): Array<codenvy.IOrganization> {
     return this.organizations;
   }
 }
