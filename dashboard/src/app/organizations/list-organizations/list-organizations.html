@@ -4,7 +4,7 @@
                      che-input-placeholder="Search"
                      che-search-model="listOrganizationsController.organizationFilter.name"
                      che-hide-search="!listOrganizationsController.organizations || listOrganizationsController.organizations.length === 0"
-                     che-add-button-title="Add Organizations"
+                     che-add-button-title="{{listOrganizationsController.parentName ? 'Add Sub-Organization' : 'Add Organization'}}"
                      che-add-button-href="#/admin/create-organization{{listOrganizationsController.parentName ? '/' + listOrganizationsController.parentName : ''}}"
                      che-hide-add="!listOrganizationsController.hasManagePermission"
                      che-delete-button-title="Delete"
