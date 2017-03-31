@@ -48,7 +48,7 @@
               </che-input-box>
 
             </che-label-container>
-            <div ng-show="!organizationDetailsController.isRootOrganization()">
+            <div ng-if="!organizationDetailsController.isRootOrganization()">
               <!-- Workspace cap -->
               <che-label-container che-label-name="Workspace Cap"
                                    che-label-description="Maximum number of workspaces for the organization.">
@@ -89,6 +89,56 @@
                                aria-label="runtime cap"
                                che-place-holder="Workspace RAM has not been limited."
                                ng-model="organizationDetailsController.limits.ramCap"
+                               che-readonly="!organizationDetailsController.canChangeResourceLimits()"
+                               type="number"
+                               che-type-number
+                               min="0"
+                               max="1000">
+                  <div ng-message="min">A workspace RAM cap should be greater than 0.</div>
+                </che-input-box>
+              </che-label-container>
+            </div>
+            <div ng-if="organizationDetailsController.isRootOrganization()">
+              <!-- Workspace total resources -->
+              <che-label-container che-label-name="Workspace Cap"
+                                   che-label-description="Maximum number of workspaces for the organization.">
+                <che-input-box che-name="workspaceCap" che-form="organizationDetailsController.organizationForm"
+                               aria-label="workspace cap"
+                               che-place-holder="Total number of workspaces has not been limited."
+                               ng-model="organizationDetailsController.totalResources.workspaceCap"
+                               che-readonly="!organizationDetailsController.canChangeResourceLimits()"
+                               type="number"
+                               che-type-number
+                               min="0"
+                               max="1000">
+                  <div ng-message="required">A workspace cap is required.</div>
+                  <div ng-message="min">A workspace cap should be greater than 0.</div>
+                </che-input-box>
+              </che-label-container>
+
+              <!-- Running workspace cap -->
+              <che-label-container che-label-name="Running Workspace Cap"
+                                   che-label-description="Maximum number of running workspaces for each organization.">
+                <che-input-box che-name="runtimeCap" che-form="organizationDetailsController.organizationForm"
+                               aria-label="runtime cap"
+                               che-place-holder="Number of running workspaces has not been limited."
+                               ng-model="organizationDetailsController.totalResources.runtimeCap"
+                               che-readonly="!organizationDetailsController.canChangeResourceLimits()"
+                               type="number"
+                               che-type-number
+                               min="0"
+                               max="1000">
+                  <div ng-message="required">A running workspace cap is required.</div>
+                  <div ng-message="min">A running workspace cap should be greater than 0.</div>
+                </che-input-box>
+              </che-label-container>
+              <!-- Workspace RAM cap -->
+              <che-label-container che-label-name="Workspace RAM Cap" class="organization-ram-cap"
+                                   che-label-description="Maximum RAM organization workspaces can use.">
+                <che-input-box che-name="workspaceRamCap" che-form="organizationDetailsController.organizationForm"
+                               aria-label="runtime cap"
+                               che-place-holder="Workspace RAM has not been limited."
+                               ng-model="organizationDetailsController.totalResources.ramCap"
                                che-readonly="!organizationDetailsController.canChangeResourceLimits()"
                                type="number"
                                che-type-number

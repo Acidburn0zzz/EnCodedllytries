@@ -65,9 +65,13 @@ export class ListOrganizationsController {
    */
   private organizationMembers: Map<string, number>;
   /**
-   * Map of organization resources.
+   * Map of organization total resources.
    */
-  private organizationResources: Map<string, any>;
+  private organizationTotalResources: Map<string, any>;
+  /**
+   * Map of organization available resources.
+   */
+  private organizationAvailableResources: Map<string, any>;
   /**
    * Selected status of organizations in the list.
    */
@@ -163,7 +167,8 @@ export class ListOrganizationsController {
     }
     if (this.organizations && this.organizations.length) {
       this.organizationMembers = new Map();
-      this.organizationResources = new Map();
+      this.organizationTotalResources = new Map();
+      this.organizationAvailableResources = new Map();
       let promises = [];
       this.isLoading = true;
       this.organizations.forEach((organization: codenvy.IOrganization) => {
@@ -171,10 +176,15 @@ export class ListOrganizationsController {
           this.organizationMembers.set(organization.id, this.codenvyPermissions.getOrganizationPermissions(organization.id).length);
         });
         promises.push(promiseMembers);
-        let promiseResource = this.codenvyResourcesDistribution.fetchOrganizationResources(organization.id).then(() => {
-          this.processResource(organization.id);
+        let promiseTotalResource = this.codenvyResourcesDistribution.fetchTotalOrganizationResources(organization.id).then(() => {
+          this.processTotalResource(organization.id);
         });
-        promises.push(promiseResource);
+        promises.push(promiseTotalResource);
+
+        let promiseAvailableResource = this.codenvyResourcesDistribution.fetchAvailableOrganizationResources(organization.id).then(() => {
+          this.processAvailableResource(organization.id);
+        });
+        promises.push(promiseAvailableResource);
       });
       this.$q.all(promises).finally(() => {
         this.isLoading = false;
@@ -183,13 +193,23 @@ export class ListOrganizationsController {
   }
 
   /**
-   * Process organization resources.
+   * Process total organization resources.
    *
    * @param organizationId organization's id
    */
-  processResource(organizationId: string): void {
-    let ramLimit = this.codenvyResourcesDistribution.getOrganizationResourceByType(organizationId, CodenvyResourceLimits.RAM);
-    this.organizationResources.set(organizationId, ramLimit ? ramLimit.amount : undefined);
+  processTotalResource(organizationId: string): void {
+    let ramLimit = this.codenvyResourcesDistribution.getOrganizationTotalResourceByType(organizationId, CodenvyResourceLimits.RAM);
+    this.organizationTotalResources.set(organizationId, ramLimit ? ramLimit.amount : undefined);
+  }
+
+  /**
+   * Process available organization resources.
+   *
+   * @param organizationId organization's id
+   */
+  processAvailableResource(organizationId: string): void {
+    let ramLimit = this.codenvyResourcesDistribution.getOrganizationAvailableResourceByType(organizationId, CodenvyResourceLimits.RAM);
+    this.organizationAvailableResources.set(organizationId, ramLimit ? ramLimit.amount : undefined);
   }
 
   /**
@@ -206,14 +226,28 @@ export class ListOrganizationsController {
   }
 
   /**
-   * Returns the RAM limit value.
+   * Returns the total RAM of the organization.
    *
    * @param organizationId organization's id
    * @returns {any}
    */
-  getRamCap(organizationId: string): any {
-    if (this.organizationResources && this.organizationResources.size > 0) {
-      let ram = this.organizationResources.get(organizationId);
+  getTotalRAM(organizationId: string): any {
+    if (this.organizationTotalResources && this.organizationTotalResources.size > 0) {
+      let ram = this.organizationTotalResources.get(organizationId);
+      return ram ? (ram / 1024) : null;
+    }
+    return null;
+  }
+
+  /**
+   * Returns the available RAM of the organization.
+   *
+   * @param organizationId organization's id
+   * @returns {any}
+   */
+  getAvailableRAM(organizationId: string): any {
+    if (this.organizationAvailableResources && this.organizationAvailableResources.size > 0) {
+      let ram = this.organizationAvailableResources.get(organizationId);
       return ram ? (ram / 1024) : null;
     }
     return null;

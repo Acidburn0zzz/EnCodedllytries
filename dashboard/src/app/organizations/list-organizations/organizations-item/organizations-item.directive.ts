@@ -41,7 +41,8 @@ export class OrganizationsItem implements ng.IDirective {
   scope = {
     organization: '=',
     members: '=',
-    ramCap: '=',
+    totalRam: '=',
+    availableRam: '=',
     isChecked: '=cdvyChecked',
     isSelect: '=?ngModel',
     isSelectable: '=?cdvyIsSelectable',
