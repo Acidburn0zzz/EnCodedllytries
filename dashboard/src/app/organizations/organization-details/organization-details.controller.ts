@@ -96,6 +96,14 @@ export class OrganizationDetailsController {
    */
   private limitsCopy: any;
   /**
+   * Organization total resources.
+   */
+  private totalResources: any;
+  /**
+   * Copy of organization total resources before letting to modify, to be able to compare.
+   */
+  private totalResourcesCopy: any;
+  /**
    * Page loading state.
    */
   private isLoading: boolean;
@@ -180,7 +188,13 @@ export class OrganizationDetailsController {
     this.subOrganizations = this.lodash.filter(this.codenvyOrganization.getOrganizations(), (organization: codenvy.IOrganization) => {
       return organization.parent === this.organization.id;
     });
-    this.fetchLimits();
+
+    if (this.isRootOrganization()) {
+      this.fetchTotalResources();
+    } else {
+      this.fetchLimits();
+    }
+
     this.fetchUserPermissions();
   }
 
@@ -279,7 +293,7 @@ export class OrganizationDetailsController {
    */
   canChangeResourceLimits(): boolean {
     if (this.isRootOrganization()) {
-      return false;
+      return this.codenvyPermissions.getUserServices().hasAdminUserService;
     }
     return this.organization && this.isUserAllowedTo(CodenvyOrganizationActions.MANAGE_RESOURCES);
   }
@@ -340,6 +354,37 @@ export class OrganizationDetailsController {
     this.limits.runtimeCap = runtimeLimit ? runtimeLimit.amount : undefined;
     this.limits.ramCap = ramLimit ? ramLimit.amount / 1024 : undefined;
     this.limitsCopy = angular.copy(this.limits);
+  }
+
+
+  /**
+   * Fetches total resources of the organization (workspace, runtime, RAM caps, etc).
+   */
+  fetchTotalResources(): void {
+    this.isLoading = true;
+    this.codenvyResourcesDistribution.fetchTotalOrganizationResources(this.organization.id).then(() => {
+      this.isLoading = false;
+      this.processTotalResources();
+    }, (error: any) => {
+      this.isLoading = false;
+      this.limits = {};
+      this.limitsCopy = angular.copy(this.limits);
+    });
+  }
+
+  /**
+   * Process organization's total resources.
+   */
+  processTotalResources(): void {
+    let ram = this.codenvyResourcesDistribution.getOrganizationTotalResourceByType(this.organization.id, CodenvyResourceLimits.RAM);
+    let workspace = this.codenvyResourcesDistribution.getOrganizationTotalResourceByType(this.organization.id, CodenvyResourceLimits.WORKSPACE);
+    let runtime = this.codenvyResourcesDistribution.getOrganizationTotalResourceByType(this.organization.id, CodenvyResourceLimits.RUNTIME);
+
+    this.totalResources = {};
+    this.totalResources.workspaceCap = workspace ? workspace.amount : undefined;
+    this.totalResources.runtimeCap = runtime ? runtime.amount : undefined;
+    this.totalResources.ramCap = ram ? ram.amount / 1024 : undefined;
+    this.totalResourcesCopy = angular.copy(this.totalResources);
   }
 
   /**
@@ -419,6 +464,48 @@ export class OrganizationDetailsController {
   }
 
   /**
+   * Update resource limits.
+   */
+  updateTotalResources(): void {
+    if (!this.organization || !this.totalResources || angular.equals(this.totalResources, this.totalResourcesCopy)) {
+      return;
+    }
+    let resources = angular.copy(this.codenvyResourcesDistribution.getTotalOrganizationResources(this.organization.id));
+
+    let resourcesToRemove = [CodenvyResourceLimits.TIMEOUT];
+    if (this.totalResources.ramCap !== null && this.totalResources.ramCap !== undefined) {
+      resources = this.codenvyResourcesDistribution.setOrganizationResourceLimitByType(resources, CodenvyResourceLimits.RAM, (this.totalResources.ramCap * 1024).toString());
+    } else {
+      resourcesToRemove.push(CodenvyResourceLimits.RAM);
+    }
+    if (this.totalResources.workspaceCap !== null && this.totalResources.workspaceCap !== undefined) {
+      resources = this.codenvyResourcesDistribution.setOrganizationResourceLimitByType(resources, CodenvyResourceLimits.WORKSPACE, this.totalResources.workspaceCap);
+    } else {
+      resourcesToRemove.push(CodenvyResourceLimits.WORKSPACE);
+    }
+    if (this.totalResources.runtimeCap !== null && this.totalResources.runtimeCap !== undefined) {
+      resources = this.codenvyResourcesDistribution.setOrganizationResourceLimitByType(resources, CodenvyResourceLimits.RUNTIME, this.totalResources.runtimeCap);
+    } else {
+      resourcesToRemove.push(CodenvyResourceLimits.RUNTIME);
+    }
+    // if the timeout resource will be send in this case - it will set the timeout for the current organization, and the updating timeout of
+    // parent organization will not affect the current organization, so to avoid this - remove timeout resource if present:
+    this.lodash.remove(resources, (resource: any) => {
+      return resourcesToRemove.indexOf(resource.type) >= 0;
+    });
+
+    this.isLoading = true;
+
+    this.codenvyResourcesDistribution.updateTotalResources(this.organization.id, resources).then(() => {
+      this.fetchTotalResources();
+    }, (error: any) => {
+      let errorMessage = 'Failed to update organization CAPs.';
+      this.cheNotification.showError((error.data && error.data.message !== null) ? errorMessage + '</br>Reason: ' + error.data.message : errorMessage);
+      this.fetchTotalResources();
+    });
+  }
+
+  /**
    * Returns whether save button is disabled.
    *
    * @return {boolean}
@@ -434,16 +521,18 @@ export class OrganizationDetailsController {
    */
   isSaveButtonVisible(): boolean {
     return (this.selectedTabIndex === Tab.Settings && !this.isLoading) && (!angular.equals(this.organization.name, this.newName) ||
-      !angular.equals(this.limits, this.limitsCopy));
+      !angular.equals(this.limits, this.limitsCopy) || !angular.equals(this.totalResources, this.totalResourcesCopy));
   }
 
   updateOrganization(): void {
     this.updateOrganizationName();
     this.updateLimits();
+    this.updateTotalResources();
   }
 
   cancelChanges(): void {
     this.newName = angular.copy(this.organization.name);
     this.limits = angular.copy(this.limitsCopy);
+    this.totalResources = angular.copy(this.totalResourcesCopy);
   }
 }

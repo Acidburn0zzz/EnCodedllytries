@@ -35,7 +35,9 @@
           <che-list-header-column flex-gt-xs="20"
                                   che-column-title='Members'></che-list-header-column>
           <che-list-header-column flex-gt-xs="15"
-                                  che-column-title='RAM CAP'></che-list-header-column>
+                                  che-column-title='Total RAM'></che-list-header-column>
+          <che-list-header-column flex-gt-xs="15"
+                                  che-column-title='Available RAM'></che-list-header-column>
           <che-list-header-column flex-gt-xs="20"
                                   che-column-title='Sub-Organizations'></che-list-header-column>
           <che-list-header-column flex-gt-xs="15"
@@ -48,7 +50,8 @@
         ng-repeat="organization in listOrganizationsController.organizations  | orderBy:listOrganizationsController.organizationOrderBy | filter:listOrganizationsController.organizationFilter"
         organization="organization"
         members="listOrganizationsController.getMembersCount(organization.id)"
-        ram-cap="listOrganizationsController.getRamCap(organization.id)"
+        total-ram="listOrganizationsController.getTotalRAM(organization.id)"
+        available-ram="listOrganizationsController.getAvailableRAM(organization.id)"
         cdvy-is-selectable="listOrganizationsController.hasManagePermission"
         ng-model="listOrganizationsController.organizationsSelectedStatus[organization.id]"
         on-update="listOrganizationsController.onUpdate()"

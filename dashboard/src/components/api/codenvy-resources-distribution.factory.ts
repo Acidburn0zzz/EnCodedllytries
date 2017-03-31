@@ -19,8 +19,10 @@ import {CodenvyResourceLimits} from './codenvy-resource-limits';
 interface ICodenvyResourcesResource<T> extends ng.resource.IResourceClass<T> {
   distribute: any;
   getResources: any;
+  getTotalResources: any;
   getUsedResources: any;
   getAvailableResources: any;
+  updateFreeResources: any;
 }
 
 const RAM_RESOURCE_TYPE: string = 'RAM';
@@ -48,9 +50,13 @@ export class CodenvyResourcesDistribution {
    */
   private remoteResourcesAPI: ICodenvyResourcesResource<any>;
   /**
-   * Organization resources with organization's id as a key.
+   * Organization distributed resources with organization's id as a key.
    */
   private organizationResources: Map<string, any>;
+  /**
+   * Organization total resources with organization's id as a key.
+   */
+  private organizationTotalResources: Map<string, any>;
   /**
    * Organization used resources with organization's id as a key.
    */
@@ -70,14 +76,17 @@ export class CodenvyResourcesDistribution {
     this.lodash = lodash;
 
     this.organizationResources = new Map();
+    this.organizationTotalResources = new Map();
     this.organizationUsedResources = new Map();
     this.organizationAvailableResources = new Map();
 
     this.remoteResourcesAPI = <ICodenvyResourcesResource<any>>this.$resource('/api/organization/resource', {}, {
       distribute: {method: 'POST', url: '/api/organization/resource/:organizationId/cap'},
       getResources: {method: 'GET', url: '/api/organization/resource/:organizationId/cap', isArray: true},
+      getTotalResources: {method: 'GET', url: '/api/resource/:organizationId', isArray: true},
       getUsedResources: {method: 'GET', url: '/api/resource/:organizationId/used', isArray: true},
-      getAvailableResources: {method: 'GET', url: '/api/resource/:organizationId/available', isArray: true}
+      getAvailableResources: {method: 'GET', url: '/api/resource/:organizationId/available', isArray: true},
+      updateFreeResources: {method: 'POST', url: '/api/resource/free'}
     });
   }
 
@@ -90,6 +99,18 @@ export class CodenvyResourcesDistribution {
    */
   distributeResources(organizationId: string, resources: Array<any>): ng.IPromise<any> {
      return this.remoteResourcesAPI.distribute({'organizationId': organizationId}, resources).$promise;
+  }
+
+  /**
+   * Update total resources for pointed root organization.
+   * This method updates the provided free resources for the organization.
+   *
+   * @param organizationId id of organization to update resources
+   * @param resources resources to update
+   * @returns {ng.IPromise<T>}
+   */
+  updateTotalResources(organizationId: string, resources: Array<any>): ng.IPromise<any> {
+    return this.remoteResourcesAPI.updateFreeResources({'accountId': organizationId, 'resources': resources}).$promise;
   }
 
   /**
@@ -124,6 +145,37 @@ export class CodenvyResourcesDistribution {
   }
 
   /**
+   * Fetch total resources by organization's id.
+   *
+   * @param organizationId organization's id
+   * @returns {ng.IPromise<any>}
+   */
+  fetchTotalOrganizationResources(organizationId: string): ng.IPromise<any> {
+    let promise = this.remoteResourcesAPI.getTotalResources({'organizationId': organizationId}).$promise;
+    let resultPromise = promise.then((resources: Array<any>) => {
+      this.organizationTotalResources.set(organizationId, resources);
+      return resources;
+    }, (error: any) => {
+      if (error.status === 304) {
+        return this.organizationTotalResources.get(organizationId);
+      }
+      return this.$q.reject();
+    });
+
+    return resultPromise;
+  }
+
+  /**
+   * Returns the list of organization's total resources by organization's id
+   *
+   * @param organizationId organization's id
+   * @returns {*} list of organization used resources
+   */
+  getTotalOrganizationResources(organizationId: string): any {
+    return this.organizationTotalResources.get(organizationId);
+  }
+
+  /**
    * Fetch used resources by organization's id.
    *
    * @param organizationId organization id
@@ -133,6 +185,12 @@ export class CodenvyResourcesDistribution {
     let promise = this.remoteResourcesAPI.getUsedResources({'organizationId': organizationId}).$promise;
     let resultPromise = promise.then((resources: Array<any>) => {
       this.organizationUsedResources.set(organizationId, resources);
+      return resources;
+    }, (error: any) => {
+      if (error.status === 304) {
+        return this.organizationUsedResources.get(organizationId);
+      }
+      return this.$q.reject();
     });
 
     return resultPromise;
@@ -158,6 +216,12 @@ export class CodenvyResourcesDistribution {
     let promise = this.remoteResourcesAPI.getAvailableResources({'organizationId': organizationId}).$promise;
     let resultPromise = promise.then((resources: Array<any>) => {
       this.organizationAvailableResources.set(organizationId, resources);
+      return resources;
+    }, (error: any) => {
+      if (error.status === 304) {
+        return this.organizationAvailableResources.get(organizationId);
+      }
+      return this.$q.reject();
     });
 
     return resultPromise;
@@ -173,6 +237,41 @@ export class CodenvyResourcesDistribution {
     return this.organizationAvailableResources.get(organizationId);
   }
 
+  /**
+   * Returns organization's total resource limits by resource type.
+   *
+   * @param organizationId id of organization
+   * @param type type of resource
+   * @returns {any} resource limit
+   */
+  getOrganizationTotalResourceByType(organizationId: string, type: CodenvyResourceLimits): any {
+    let resources = this.organizationTotalResources.get(organizationId);
+    if (!resources) {
+      return null;
+    }
+
+    return this.lodash.find(resources, (resource: any) => {
+      return resource.type === type.valueOf();
+    });
+  }
+
+  /**
+   * Returns organization's available resource limits by resource type.
+   *
+   * @param organizationId id of organization
+   * @param type type of resource
+   * @returns {any} resource limit
+   */
+  getOrganizationAvailableResourceByType(organizationId: string, type: CodenvyResourceLimits): any {
+    let resources = this.organizationAvailableResources.get(organizationId);
+    if (!resources) {
+      return null;
+    }
+
+    return this.lodash.find(resources, (resource: any) => {
+      return resource.type === type.valueOf();
+    });
+  }
 
   /**
    * Returns organization's resource limits by resource type.

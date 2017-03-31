@@ -28,8 +28,14 @@
       <div flex-gt-xs="15"
            ng-click="organizationsItemController.redirectToOrganizationDetails()"
            class="cap-value">
-        <span class="che-xs-header noselect" hide-gt-xs>RAM Cap</span>
-        <span>{{organizationsItemController.ramCap ? organizationsItemController.ramCap + 'GB' : 'not set'}}</span>
+        <span class="che-xs-header noselect" hide-gt-xs>Total RAM</span>
+        <span>{{organizationsItemController.totalRam ? organizationsItemController.totalRam + 'GB' : 'none'}}</span>
+      </div>
+      <div flex-gt-xs="15"
+           ng-click="organizationsItemController.redirectToOrganizationDetails()"
+           class="cap-value">
+        <span class="che-xs-header noselect" hide-gt-xs>Available RAM</span>
+        <span>{{organizationsItemController.availableRam ? organizationsItemController.availableRam + 'GB' : 'none'}}</span>
       </div>
       <div flex-gt-xs="20"
            ng-click="organizationsItemController.redirectToOrganizationDetails('Organization')">
