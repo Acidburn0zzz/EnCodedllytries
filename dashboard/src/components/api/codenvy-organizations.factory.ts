@@ -14,8 +14,6 @@
  */
 'use strict';
 
-import {CodenvyTeamEventsManager} from './codenvy-team-events-manager.factory';
-import {CodenvyUser} from './codenvy-user.factory';
 import {CodenvyOrganizationRoles} from './codenvy-organization-roles';
 
 interface IOrganizationsResource<T> extends ng.resource.IResourceClass<T> {
@@ -48,10 +46,6 @@ export class CodenvyOrganization {
    */
   private organizations: Array<codenvy.IOrganization> = [];
   /**
-   * The Codenvy user API.
-   */
-  private codenvyUser: CodenvyUser;
-  /**
    * Client for requesting Organization API.
    */
   private remoteOrganizationAPI: IOrganizationsResource<any>;
@@ -64,11 +58,10 @@ export class CodenvyOrganization {
    * Default constructor that is using resource
    * @ngInject for Dependency injection
    */
-  constructor($resource: ng.resource.IResourceService, $q: ng.IQService, lodash: any, codenvyUser: CodenvyUser) {
+  constructor($resource: ng.resource.IResourceService, $q: ng.IQService, lodash: any) {
     this.$resource = $resource;
     this.$q = $q;
     this.lodash = lodash;
-    this.codenvyUser = codenvyUser;
 
     this.remoteOrganizationAPI = <IOrganizationsResource<any>>$resource('/api/organization', {}, {
       getOrganizations: {method: 'GET', url: '/api/organization', isArray: true},

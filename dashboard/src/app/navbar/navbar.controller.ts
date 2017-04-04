@@ -155,7 +155,7 @@ export class CodenvyNavBarController {
     this.codenvyAPI.getOrganization().fetchOrganizations().then(() => {
       let organizations = this.codenvyAPI.getOrganization().getOrganizations();
       if (organizations) {
-        let user = this.codenvyUser.getUser();
+        let user = this.cheAPI.getUser().getUser();
         this.personalAccount = organizations.find((organization: any) => {
           return organization.qualifiedName === user.name;
         });

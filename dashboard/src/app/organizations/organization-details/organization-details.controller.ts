@@ -16,7 +16,6 @@
 import {CodenvyResourcesDistribution} from '../../../components/api/codenvy-resources-distribution.factory';
 import {CodenvyResourceLimits} from '../../../components/api/codenvy-resource-limits';
 import {CodenvyPermissions} from '../../../components/api/codenvy-permissions.factory';
-import {CodenvyUser} from '../../../components/api/codenvy-user.factory';
 import {CodenvyOrganization} from '../../../components/api/codenvy-organizations.factory';
 import {CodenvyOrganizationActions} from '../../../components/api/codenvy-organization-actions';
 
@@ -45,7 +44,7 @@ export class OrganizationDetailsController {
   /**
    * User API interaction.
    */
-  private codenvyUser: CodenvyUser;
+  private cheUser: any;
   /**
    * Notifications service.
    */
@@ -116,7 +115,7 @@ export class OrganizationDetailsController {
    * @ngInject for Dependency injection
    */
   constructor(codenvyResourcesDistribution: CodenvyResourcesDistribution, codenvyPermissions: CodenvyPermissions,
-              codenvyUser: CodenvyUser, $route: ng.route.IRouteService, $location: ng.ILocationService, $rootScope: che.IRootScopeService,
+              cheUser: any, $route: ng.route.IRouteService, $location: ng.ILocationService, $rootScope: che.IRootScopeService,
               $scope: ng.IScope, confirmDialogService: any, cheNotification: any,
               lodash: any, codenvyOrganization: CodenvyOrganization, organization: codenvy.IOrganization) {
     this.codenvyResourcesDistribution = codenvyResourcesDistribution;
@@ -124,7 +123,7 @@ export class OrganizationDetailsController {
     this.codenvyOrganization = codenvyOrganization;
     this.codenvyPermissions = codenvyPermissions;
     this.cheNotification = cheNotification;
-    this.codenvyUser = codenvyUser;
+    this.cheUser = cheUser;
     this.$location = $location;
     this.$route = $route;
     this.lodash = lodash;
@@ -225,7 +224,7 @@ export class OrganizationDetailsController {
    * @returns {Array} current user allowed actions
    */
   processUserPermissions(): Array<string> {
-    let userId = this.codenvyUser.getUser().id;
+    let userId = this.cheUser.getUser().id;
     let permissions = this.codenvyPermissions.getOrganizationPermissions(this.organization.id);
     let userPermissions = this.lodash.find(permissions, (permission: any) => {
       return permission.userId === userId;
@@ -252,7 +251,7 @@ export class OrganizationDetailsController {
    * @returns {boolean} <code>true</code> if personal
    */
   isPersonalOrganization(): boolean  {
-    let user = this.codenvyUser.getUser();
+    let user = this.cheUser.getUser();
     return this.organization && user && this.organization.qualifiedName === user.name;
   }
 
