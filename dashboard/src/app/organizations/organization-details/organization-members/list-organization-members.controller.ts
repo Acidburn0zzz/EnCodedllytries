@@ -14,7 +14,6 @@
  */
 'use strict';
 import {CodenvyPermissions} from '../../../../components/api/codenvy-permissions.factory';
-import {CodenvyUser} from '../../../../components/api/codenvy-user.factory';
 import {CodenvyOrganization} from '../../../../components/api/codenvy-organizations.factory';
 import {OrganizationsPermissionService} from '../../organizations-permission.service';
 import {CodenvyOrganizationActions} from '../../../../components/api/codenvy-organization-actions';
@@ -33,7 +32,7 @@ export class ListOrganizationMembersController {
   /**
    * User API interaction.
    */
-  private codenvyUser: CodenvyUser;
+  private cheUser: any;
   /**
    * Organization API interaction.
    */
@@ -111,12 +110,12 @@ export class ListOrganizationMembersController {
    * Default constructor that is using resource
    * @ngInject for Dependency injection
    */
-  constructor(codenvyPermissions: CodenvyPermissions, codenvyUser: CodenvyUser, cheProfile: any, codenvyOrganization: CodenvyOrganization,
+  constructor(codenvyPermissions: CodenvyPermissions, cheUser: any, cheProfile: any, codenvyOrganization: CodenvyOrganization,
               confirmDialogService: any, $mdDialog: angular.material.IDialogService, $q: ng.IQService, cheNotification: any,
               lodash: any, $location: ng.ILocationService, organizationsPermissionService: OrganizationsPermissionService) {
     this.codenvyPermissions = codenvyPermissions;
     this.cheProfile = cheProfile;
-    this.codenvyUser = codenvyUser;
+    this.cheUser = cheUser;
     this.codenvyOrganization = codenvyOrganization;
     this.$mdDialog = $mdDialog;
     this.$q = $q;
@@ -396,7 +395,7 @@ export class ListOrganizationMembersController {
       for (let i = 0; i < checkedKeys.length; i++) {
         let id = checkedKeys[i];
         this.membersSelectedStatus[id] = false;
-        if (id === this.codenvyUser.getUser().id) {
+        if (id === this.cheUser.getUser().id) {
           isCurrentUser = true;
         }
         let promise = this.codenvyPermissions.removeOrganizationPermissions(this.organization.id, id);
@@ -505,7 +504,7 @@ export class ListOrganizationMembersController {
   removePermissions(member: codenvy.IMember): void {
     this.isLoading = true;
     this.codenvyPermissions.removeOrganizationPermissions(member.permissions.instanceId, member.userId).then(() => {
-      if (member.userId === this.codenvyUser.getUser().id) {
+      if (member.userId === this.cheUser.getUser().id) {
         this.processCurrentUserRemoval();
       } else {
         this.fetchMembers();

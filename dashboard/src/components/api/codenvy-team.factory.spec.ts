@@ -114,7 +114,7 @@ describe('CodenvyTeam', () => {
       httpBackend.flush();
     });
 
-    xit('should reject promise if user\'s request failed', () => {
+    it('should reject promise if user\'s request failed', () => {
       let errorMessage = 'user request failed',
           callbacks = {
             testResolve: () => {},

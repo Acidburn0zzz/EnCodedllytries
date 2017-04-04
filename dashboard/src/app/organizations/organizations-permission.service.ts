@@ -13,7 +13,6 @@
  * from Codenvy S.A..
  */
 'use strict';
-import {CodenvyUser} from '../../components/api/codenvy-user.factory';
 import {CodenvyPermissions} from '../../components/api/codenvy-permissions.factory';
 
 
@@ -31,7 +30,7 @@ export class OrganizationsPermissionService {
   /**
    * User API interaction.
    */
-  private codenvyUser: CodenvyUser;
+  private cheUser: any;
   /**
    * User id.
    */
@@ -42,15 +41,15 @@ export class OrganizationsPermissionService {
   /**
    * @ngInject for Dependency injection
    */
-  constructor(codenvyPermissions: CodenvyPermissions, codenvyUser: CodenvyUser) {
+  constructor(codenvyPermissions: CodenvyPermissions, cheUser: any) {
     this.codenvyPermissions = codenvyPermissions;
-    this.codenvyUser = codenvyUser;
+    this.cheUser = cheUser;
 
-    let user = this.codenvyUser.getUser();
+    let user = this.cheUser.getUser();
     if (user) {
       this.userId = user.id;
     } else {
-      this.codenvyUser.fetchUser().then((user: codenvy.IUser) => {
+      this.cheUser.fetchUser().then((user: codenvy.IUser) => {
         this.userId = user.userId;
       });
     }

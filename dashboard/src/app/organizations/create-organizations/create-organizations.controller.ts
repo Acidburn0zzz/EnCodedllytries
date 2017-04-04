@@ -14,7 +14,6 @@
  */
 'use strict';
 import {CodenvyPermissions} from '../../../components/api/codenvy-permissions.factory';
-import {CodenvyUser} from '../../../components/api/codenvy-user.factory';
 import {CodenvyOrganization} from '../../../components/api/codenvy-organizations.factory';
 
 /**
@@ -28,10 +27,6 @@ export class CreateOrganizationController {
    * Organization API interaction.
    */
   private codenvyOrganization: CodenvyOrganization;
-  /**
-   * User API interaction.
-   */
-  private codenvyUser: CodenvyUser;
   /**
    * Permissions API interaction.
    */
@@ -77,10 +72,9 @@ export class CreateOrganizationController {
    * Default constructor
    * @ngInject for Dependency injection
    */
-  constructor(codenvyOrganization: CodenvyOrganization, codenvyUser: CodenvyUser, codenvyPermissions: CodenvyPermissions, cheNotification: any,
+  constructor(codenvyOrganization: CodenvyOrganization, codenvyPermissions: CodenvyPermissions, cheNotification: any,
               $location: ng.ILocationService, $q: ng.IQService, $log: ng.ILogService, $route: ng.route.IRouteService) {
     this.codenvyOrganization = codenvyOrganization;
-    this.codenvyUser = codenvyUser;
     this.codenvyPermissions = codenvyPermissions;
     this.cheNotification = cheNotification;
     this.$location = $location;
