@@ -48,10 +48,6 @@ export class CodenvyOrganization {
    */
   private organizations: Array<codenvy.IOrganization> = [];
   /**
-   * The registry for managing available namespaces.
-   */
-  private cheNamespaceRegistry: any;
-  /**
    * The Codenvy user API.
    */
   private codenvyUser: CodenvyUser;
@@ -59,10 +55,6 @@ export class CodenvyOrganization {
    * Client for requesting Organization API.
    */
   private remoteOrganizationAPI: IOrganizationsResource<any>;
-  /**
-   * Deferred object which will be resolved when organizations are fetched
-   */
-  private fetchOrganizationsDefer: ng.IDeferred<any>;
   /**
    * Organizations map by parent organization's id.
    */
@@ -72,11 +64,10 @@ export class CodenvyOrganization {
    * Default constructor that is using resource
    * @ngInject for Dependency injection
    */
-  constructor($resource: ng.resource.IResourceService, $q: ng.IQService, lodash: any, cheNamespaceRegistry: any, codenvyUser: CodenvyUser) {
+  constructor($resource: ng.resource.IResourceService, $q: ng.IQService, lodash: any, codenvyUser: CodenvyUser) {
     this.$resource = $resource;
     this.$q = $q;
     this.lodash = lodash;
-    this.cheNamespaceRegistry = cheNamespaceRegistry;
     this.codenvyUser = codenvyUser;
 
     this.remoteOrganizationAPI = <IOrganizationsResource<any>>$resource('/api/organization', {}, {
@@ -87,10 +78,6 @@ export class CodenvyOrganization {
       updateOrganization: {method: 'POST', url: '/api/organization/:id'},
       fetchSubOrganizations: {method: 'GET', url: '/api/organization/:id/organizations'}
     });
-
-    this.fetchOrganizationsDefer = this.$q.defer();
-    const fetchOrganizationsPromise = this.fetchOrganizationsDefer.promise;
-    this.cheNamespaceRegistry.setFetchPromise(fetchOrganizationsPromise);
   }
 
   /**
@@ -130,11 +117,9 @@ export class CodenvyOrganization {
         this.organizations.push(organization);
         this.organizationsMap.set(organization.id, organization);
       });
-      this.fetchOrganizationsDefer.resolve();
       return this.organizations;
     }, (error: any) => {
       if (error.status === 304) {
-        this.fetchOrganizationsDefer.resolve();
         return this.organizations;
       } else {
         return this.$q.reject(error);

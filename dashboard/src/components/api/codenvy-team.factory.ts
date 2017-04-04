@@ -121,10 +121,10 @@ export class CodenvyTeam {
     let userPromise = this.cheUser.fetchUser();
 
     let teamsPromise = userPromise.then(() => {
-      return this.codenvyOrganization.getOrganizations().$promise;
+      return this.codenvyOrganization.fetchOrganizations();
     }, (error: any) => {
       if (error.status === 304) {
-        return this.codenvyOrganization.getOrganizations().$promise;
+        return this.codenvyOrganization.getOrganizations();
       }
       return this.$q.reject(error);
     });
