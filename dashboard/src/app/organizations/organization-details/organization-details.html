@@ -9,7 +9,9 @@
                           ng-click="organizationDetailsController.updateOrganization()"></che-button-save-flat>
   </div>
 </che-toolbar>
-<md-content md-scroll-y flex md-theme="default" ng-if="organizationDetailsController.organization">
+
+<md-content md-scroll-y flex md-theme="default"
+            ng-if="organizationDetailsController.organization">
   <md-tabs md-dynamic-height md-stretch-tabs="auto"
            md-selected="organizationDetailsController.selectedTabIndex"
            md-center-tabs="">
@@ -196,14 +198,10 @@
 
   </md-tabs>
 </md-content>
-<md-content ng-if="!organizationDetailsController.organization" flex class="organization-error-content" layout="column"
-            layout-align="center center">
-  <div class="error-title">Organization <b>{{organizationDetailsController.organizationName}}</b> not found.</div>
-  <span class="fa fa-group error-image"></span>
-  <div class="error-description">
-    The organization could be deleted by its owner or you do not have permissions to access the organization.
-  </div>
-</md-content>
+
+<organization-not-found ng-if="!organizationDetailsController.organization"
+                        organization-name="organizationDetailsController.organizationName"></organization-not-found>
+
 <workspace-edit-mode-overlay ng-if="organizationDetailsController.isSaveButtonVisible()"
                              workspace-edit-disable-save-button="organizationDetailsController.isSaveButtonDisabled()"
                              workspace-edit-mode-on-save="organizationDetailsController.updateOrganization()"

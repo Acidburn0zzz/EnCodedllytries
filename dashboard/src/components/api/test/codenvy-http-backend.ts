@@ -24,13 +24,10 @@ import {CodenvyAPIBuilder} from '../builder/codenvy-api-builder.factory';
 export class CodenvyHttpBackend {
   private httpBackend: ng.IHttpBackendService;
   private defaultBranding: any;
-  private defaultUser: any;
-  private userIdMap: Map<string, any>;
-  private userEmailMap: Map<string, any>;
-  private factoriesMap: Map<string, any>;
   private teamsMap: Map<string, any>;
-  private pageMaxItem: number;
-  private pageSkipCount: number;
+  private organizationsMap: Map<string, codenvy.IOrganization>;
+  private permissionsMap: Map<string, Array<codenvy.IPermissions>>;
+  private resourcesMap: Map<string, Map<string, any>>;
 
   /**
    * Constructor to use
@@ -40,16 +37,13 @@ export class CodenvyHttpBackend {
 
     this.defaultBranding = {};
 
-    this.defaultUser = {};
-    this.userIdMap = new Map();
-    this.userEmailMap = new Map();
-
-    this.factoriesMap = new Map();
-
     this.teamsMap = new Map();
 
-    this.pageMaxItem = 5;
-    this.pageSkipCount = 0;
+    this.organizationsMap = new Map();
+
+    this.permissionsMap = new Map();
+
+    this.resourcesMap = new Map();
 
     this.httpBackend.when('OPTIONS', '/api/').respond({});
 
@@ -71,103 +65,6 @@ export class CodenvyHttpBackend {
     this.httpBackend.when('GET', '/api/user/inrole?role=user&scope=system&scopeId=').respond(true);
     // branding
     this.httpBackend.when('GET', 'assets/branding/product.json').respond(this.defaultBranding);
-  }
-
-
-  /**
-   * Setup Backend for factories
-   */
-  factoriesBackendSetup() {
-    let allFactories = [];
-    let pageFactories = [];
-
-    let factoriesKeys = this.factoriesMap.keys();
-    for (let key of factoriesKeys) {
-      let factory = this.factoriesMap.get(key);
-      this.httpBackend.when('GET', '/api/factory/' + factory.id).respond(factory);
-      this.httpBackend.when('DELETE', '/api/factory/' + factory.id).respond(() => {
-        return [200, {success: true, errors: []}];
-      });
-      allFactories.push(factory);
-    }
-
-    if (this.defaultUser) {
-      this.httpBackend.when('GET', '/api/user').respond(this.defaultUser);
-
-      if (allFactories.length >  this.pageSkipCount) {
-        if(allFactories.length > this.pageSkipCount + this.pageMaxItem) {
-          pageFactories = allFactories.slice(this.pageSkipCount, this.pageSkipCount + this.pageMaxItem);
-        } else {
-          pageFactories = allFactories.slice(this.pageSkipCount);
-        }
-      }
-      this.httpBackend.when('GET', '/api/factory/find?creator.userId=' + this.defaultUser.id + '&maxItems=' + this.pageMaxItem + '&skipCount=' + this.pageSkipCount).respond(pageFactories);
-    }
-  }
-
-  /**
-   * Setup all users
-   */
-  usersBackendSetup() {
-    this.httpBackend.when('GET', '/api/user').respond(this.defaultUser);
-
-    let userIdKeys = this.userIdMap.keys();
-    for (let key of userIdKeys) {
-      this.httpBackend.when('GET', '/api/user/' + key).respond(this.userIdMap.get(key));
-    }
-
-    let userEmailKeys = this.userEmailMap.keys();
-    for (let key of userEmailKeys) {
-      this.httpBackend.when('GET', '/api/user/find?email=' + key).respond(this.userEmailMap.get(key));
-    }
-  }
-
-  /**
-   * Add the given factory
-   * @param factory
-   */
-  addUserFactory(factory) {
-    this.factoriesMap.set(factory.id, factory);
-  }
-
-  /**
-   * Sets max objects on response
-   * @param pageMaxItem
-   */
-  setPageMaxItem(pageMaxItem) {
-    this.pageMaxItem = pageMaxItem;
-  }
-
-  /**
-   * Sets skip count of values
-   * @param pageSkipCount
-   */
-  setPageSkipCount(pageSkipCount) {
-    this.pageSkipCount = pageSkipCount;
-  }
-
-  /**
-   * Add the given user
-   * @param user
-   */
-  setDefaultUser(user) {
-    this.defaultUser = user;
-  }
-
-  /**
-   * Add the given user to userIdMap
-   * @param user
-   */
-  addUserById(user) {
-    this.userIdMap.set(user.id, user);
-  }
-
-  /**
-   * Add the given user to userEmailMap
-   * @param user
-   */
-  addUserEmail(user) {
-    this.userEmailMap.set(user.email, user);
   }
 
   /**
@@ -203,6 +100,98 @@ export class CodenvyHttpBackend {
    */
   addTeamById(team) {
     this.teamsMap.set(team.id, team);
+  }
+
+  /**
+   * Setup Backend for organizations
+   */
+  organizationsBackendSetup(): void {
+    const allOrganizations = [];
+
+    const organizationKeys = this.organizationsMap.keys();
+    for (let key of organizationKeys) {
+      const organization = this.organizationsMap.get(key);
+      this.httpBackend.when('GET', '/api/organization/' + organization.id).respond(organization);
+      this.httpBackend.when('DELETE', '/api/organization/' + organization.id).respond(() => {
+        return [200, {success: true, errors: []}];
+      });
+      allOrganizations.push(organization);
+    }
+
+    this.httpBackend.when('GET', '/api/organization').respond(allOrganizations);
+  }
+
+  /**
+   * Add the given organization to organizationsMap
+   *
+   * @param {codenvy.IOrganization} organization the organization
+   */
+  addOrganizationById(organization: codenvy.IOrganization): void {
+    this.organizationsMap.set(organization.id, organization);
+  }
+
+  /**
+   * Setup Backend for permissions.
+   */
+  permissionsBackendSetup(): void {
+    const keys = this.permissionsMap.keys();
+    for (let domainInstanceKey of keys) {
+      const permissionsList = this.permissionsMap.get(domainInstanceKey);
+      const {domainId, instanceId} = permissionsList[0];
+
+      this.httpBackend.when('GET', `/api/permissions/${domainId}/all?instance=${instanceId}`).respond(permissionsList);
+    }
+  }
+
+  /**
+   * Add permission to a permissions map
+   *
+   * @param {codenvy.IPermissions} permissions
+   */
+  addPermissions(permissions: codenvy.IPermissions): void {
+    let domainInstanceKey = permissions.domainId + '|' + permissions.instanceId;
+
+    if (this.permissionsMap.has(domainInstanceKey)) {
+      this.permissionsMap.get(domainInstanceKey).push(permissions);
+    } else {
+      this.permissionsMap.set(domainInstanceKey, [permissions]);
+    }
+  }
+
+  /**
+   * Setup Backend for resources.
+   */
+  resourcesBackendSetup(): void {
+    const keys = this.resourcesMap.keys();
+    for (let organizationId of keys) {
+      const organizationResourcesMap = this.resourcesMap.get(organizationId);
+
+      // total
+      if (organizationResourcesMap.has('total')) {
+        const resources = organizationResourcesMap.get('total');
+        this.httpBackend.when('GET', `/api/resource/${organizationId}`).respond(resources);
+      }
+    }
+  }
+
+  /**
+   * Add resource to a resources map
+   *
+   * @param {string} organizationId organization ID
+   * @param {string} scope total, used or available
+   * @param {any} resource
+   */
+  addResource(organizationId: string, scope: string, resource: any): void {
+    if (!this.resourcesMap.has(organizationId)) {
+      this.resourcesMap.set(organizationId, new Map());
+    }
+
+    const organizationResourcesMap = this.resourcesMap.get(organizationId);
+    if (organizationResourcesMap.has(scope)) {
+      organizationResourcesMap.get(scope).push(resource);
+    } else {
+      organizationResourcesMap.set(scope, [resource]);
+    }
   }
 
 }

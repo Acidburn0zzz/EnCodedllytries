@@ -60,6 +60,14 @@ export class OrganizationMemberDialogController {
    */
   private members: Array<any>;
   /**
+   *
+   */
+  private parentOrganizationId: string;
+  /**
+   *
+   */
+  private parentOrganizationMembers: string;
+  /**
    * Entered email address.
    */
   private email: string;
@@ -149,15 +157,23 @@ export class OrganizationMemberDialogController {
   isValidEmail(value: string): boolean {
     let emails = value.replace(/ /g, ',').split(',');
     for (let i = 0; i < emails.length; i++) {
+      // email is valid
       let email = emails[i];
       let emailRe = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
       if (!emailRe.test(email)) {
-        this.emailError = email + ' is invalid email address.';
+        this.emailError = `"${email}" is invalid email address.`;
         return false;
       }
 
+      // user has not been invited yet
       if (this.emails.indexOf(email) >= 0) {
-        this.emailError = 'User with email ' + email + ' is already invited.';
+        this.emailError = `User with email ${email} is already invited.`;
+        return false;
+      }
+
+      // user is a member of parent organization
+      if (this.parentOrganizationId && this.parentOrganizationMembers.indexOf(email) === -1) {
+        this.emailError = 'User with this email is not a member of parent organization.';
         return false;
       }
     }

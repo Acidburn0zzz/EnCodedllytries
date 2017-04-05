@@ -66,14 +66,19 @@ export class CreateOrganizationController {
   /**
    * Parent organization id.
    */
-  private parentId: string;
+  private parentOrganizationId: string;
+  /**
+   * List of members of parent organization.
+   */
+  private parentOrganizationMembers: string[];
 
   /**
    * Default constructor
    * @ngInject for Dependency injection
    */
   constructor(codenvyOrganization: CodenvyOrganization, codenvyPermissions: CodenvyPermissions, cheNotification: any,
-              $location: ng.ILocationService, $q: ng.IQService, $log: ng.ILogService, $route: ng.route.IRouteService) {
+              $location: ng.ILocationService, $q: ng.IQService, $log: ng.ILogService,
+              initData: any) {
     this.codenvyOrganization = codenvyOrganization;
     this.codenvyPermissions = codenvyPermissions;
     this.cheNotification = cheNotification;
@@ -85,15 +90,10 @@ export class CreateOrganizationController {
     this.isLoading = false;
     this.members = [];
 
-    this.parentQualifiedName = $route.current.params.parentQualifiedName;
-    if (this.parentQualifiedName) {
-      let organizations = this.codenvyOrganization.getOrganizations();
-      let parentOrganization = organizations.find((organization: codenvy.IOrganization) => {
-        return organization.qualifiedName === this.parentQualifiedName;
-      });
-      this.parentId = parentOrganization ? parentOrganization.id : '';
-
-    }
+    // injected by route provider
+    this.parentQualifiedName = initData.parentQualifiedName;
+    this.parentOrganizationId = initData.parentOrganizationId;
+    this.parentOrganizationMembers = initData.parentOrganizationMembers;
   }
 
   /**
@@ -121,7 +121,7 @@ export class CreateOrganizationController {
    */
   createOrganization(): void {
     this.isLoading = true;
-    this.codenvyOrganization.createOrganization(this.organizationName, this.parentId).then((organization: codenvy.IOrganization) => {
+    this.codenvyOrganization.createOrganization(this.organizationName, this.parentOrganizationId).then((organization: codenvy.IOrganization) => {
       this.addPermissions(organization, this.members);
       this.codenvyOrganization.fetchOrganizations();
     }, (error: any) => {

@@ -27,6 +27,7 @@ import {ListOrganizationMembers} from './organization-details/organization-membe
 import {OrganizationMemberDialogController} from './organization-details/organization-member-dialog/organization-member-dialog.controller';
 import {OrganizationsPermissionService} from './organizations-permission.service';
 import {OrganizationsConfigService} from './organizations-config.service';
+import {OrganizationNotFound} from './organization-details/organization-not-found/organization-not-found.directive';
 
 /**
  * The configuration of teams, defines controllers, directives and routing.
@@ -59,33 +60,7 @@ export class OrganizationsConfig {
     register.service('organizationsPermissionService', OrganizationsPermissionService);
     register.service('organizationsConfigService', OrganizationsConfigService);
 
-    const fetchOrganizations = (organizationsConfgiService: OrganizationsConfigService) => {
-      return organizationsConfgiService.fetchOrganizations();
-    };
-
-    const fetchOrganizationDetails = ($q: ng.IQService,
-                                      $route: ng.route.IRouteService,
-                                      organizationsConfigService: OrganizationsConfigService) => {
-      const name = $route.current.params.organizationName;
-
-      const organizationPromise = organizationsConfigService.getOrFetchOrganizationByName(name);
-
-      const permissionsPromise = organizationPromise.then((organization: codenvy.IOrganization) => {
-        return organizationsConfigService.getOrFetchOrganizationPermissions(organization.id);
-      });
-
-      const resourcesPromise = organizationPromise.then((organization: codenvy.IOrganization) => {
-        if (organization.parent) {
-          return organizationsConfigService.getOrFetchOrganizationResources(organization.id);
-        } else {
-          return organizationsConfigService.getOrFetchTotalOrganizationResources(organization.id);
-        }
-      });
-
-      return organizationsConfigService.waitAll([permissionsPromise, resourcesPromise]).then(() => {
-        return organizationPromise;
-      });
-    };
+    register.directive('organizationNotFound', OrganizationNotFound);
 
     const organizationDetailsLocationProvider = {
       title: (params: any) => {
@@ -96,7 +71,9 @@ export class OrganizationsConfig {
       controller: 'OrganizationDetailsController',
       controllerAs: 'organizationDetailsController',
       resolve: {
-        organization: ['$q', '$route', 'organizationsConfigService', fetchOrganizationDetails],
+        organization: ['organizationsConfigService', (organizationConfigService: OrganizationsConfigService) => {
+          return organizationConfigService.resolveOrganizationDetailsRoute();
+        }],
       }
     };
 
@@ -106,7 +83,9 @@ export class OrganizationsConfig {
       controller: 'CreateOrganizationController',
       controllerAs: 'createOrganizationController',
       resolve: {
-        organizations: ['organizationsConfigService', fetchOrganizations]
+        initData: ['organizationsConfigService', (organizationsConfigService: OrganizationsConfigService) => {
+          return organizationsConfigService.resolveCreateOrganizationRoute();
+        }]
       }
     };
 

@@ -50,7 +50,7 @@ export class OrganizationsPermissionService {
       this.userId = user.id;
     } else {
       this.cheUser.fetchUser().then((user: codenvy.IUser) => {
-        this.userId = user.userId;
+        this.userId = user.id;
       });
     }
   }

@@ -38,6 +38,8 @@ export class ListOrganizationInviteMembers implements ng.IDirective {
   bindToController: boolean = true;
 
   scope: any = {
-    members: '='
+    members: '=',
+    parentOrganizationId: '@parentOrganizationId',
+    parentOrganizationMembers: '=parentOrganizationMembers'
   };
 }

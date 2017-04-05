@@ -66,9 +66,13 @@ export class ListOrganizationMembersController {
    */
   private lodash: any;
   /**
-   * Team's members list.
+   * Organization's members list.
    */
   private members: Array<codenvy.IMember>;
+  /**
+   * Members list of parent organization.
+   */
+  private parentOrganizationMembers: Array<string>;
   /**
    * Loading state of the page.
    */
@@ -126,7 +130,8 @@ export class ListOrganizationMembersController {
     this.organizationsPermissionService = organizationsPermissionService;
 
     this.members = [];
-    this.isLoading = true;
+    this.parentOrganizationMembers = [];
+    this.isLoading = false;
 
     this.memberFilter = {name: ''};
 
@@ -134,7 +139,10 @@ export class ListOrganizationMembersController {
     this.isBulkChecked = false;
     this.isNoSelected = true;
 
-    this.fetchMembers();
+    this.formUsersList();
+    if (this.organization.parent) {
+      this.formParentOrgMembersList();
+    }
   }
 
   /**
@@ -147,13 +155,13 @@ export class ListOrganizationMembersController {
     let permissions = this.codenvyPermissions.getOrganizationPermissions(this.organization.id);
     if (permissions && permissions.length) {
       this.isLoading = false;
-      this.formUserList();
+      this.formUsersList();
     } else {
       this.isLoading = true;
     }
     this.codenvyPermissions.fetchOrganizationPermissions(this.organization.id).then(() => {
       this.isLoading = false;
-      this.formUserList();
+      this.formUsersList();
     }, (error: any) => {
       this.isLoading = false;
       this.cheNotification.showError(error.data && error.data.message ? error.data.message : 'Failed to retrieve organization permissions.');
@@ -163,7 +171,7 @@ export class ListOrganizationMembersController {
   /**
    * Combines permissions and users data in one list.
    */
-  formUserList(): void {
+  formUsersList(): void {
     let permissions = this.codenvyPermissions.getOrganizationPermissions(this.organization.id);
     this.members = [];
 
@@ -181,6 +189,28 @@ export class ListOrganizationMembersController {
     });
 
     this.hasUpdatePermission = this.organizationsPermissionService.isUserAllowedTo(CodenvyOrganizationActions.UPDATE.toString(), this.organization.id);
+  }
+
+  /**
+   * Combines permissions and users data in one list.
+   */
+  formParentOrgMembersList(): void {
+    const permissions = this.codenvyPermissions.getOrganizationPermissions(this.organization.parent);
+    this.parentOrganizationMembers = [];
+
+    permissions.forEach((permission: any) => {
+      const userId = permission.userId;
+      const user = this.cheProfile.getProfileFromId(userId);
+
+      if (user) {
+        this.parentOrganizationMembers.push(user.email);
+      } else {
+        this.cheProfile.fetchProfileId(userId).then(() => {
+          const user = this.cheProfile.getProfileFromId(userId);
+          this.parentOrganizationMembers.push(user.email);
+        });
+      }
+    });
   }
 
   /**
@@ -216,7 +246,7 @@ export class ListOrganizationMembersController {
    * Make all members in list selected.
    */
   selectAllMembers(): void {
-    this.members.forEach((member: codenvy.IMember) => {
+    this.members[this.organization.id].forEach((member: codenvy.IMember) => {
       this.membersSelectedStatus[member.userId] = true;
     });
   }
@@ -225,7 +255,7 @@ export class ListOrganizationMembersController {
    * Make all members in list deselected.
    */
   deselectAllMembers(): void {
-    this.members.forEach((member: codenvy.IMember) => {
+    this.members[this.organization.id].forEach((member: codenvy.IMember) => {
       this.membersSelectedStatus[member.userId] = false;
     });
   }
@@ -281,7 +311,9 @@ export class ListOrganizationMembersController {
       locals: {
         members: this.members,
         callbackController: this,
-        member: member
+        member: member,
+        parentOrganizationId: this.organization.parent,
+        parentOrganizationMembers: this.parentOrganizationMembers
       },
       templateUrl: 'app/organizations/organization-details/organization-member-dialog/organization-member-dialog.html'
     });
