@@ -16,6 +16,9 @@
 
 
 import {CodenvyTeamBuilder} from './codenvy-team-builder';
+import {CodenvyOrganizationsBuilder} from './codenvy-organizations-builder';
+import {CodenvyPermissionsBuilder} from './codenvy-permissions-builder';
+import {CodenvyResourceBuilder} from './codenvy-resource-builder';
 
 /**
  * This class is providing the entry point for accessing the builders
@@ -37,5 +40,32 @@ export class CodenvyAPIBuilder {
    */
   getTeamBuilder() {
     return new CodenvyTeamBuilder();
+  }
+
+  /**
+   * The Codenvy Organizations builder
+   *
+   * @return {CodenvyOrganizationsBuilder}
+   */
+  getOrganizationsBuilder() {
+    return new CodenvyOrganizationsBuilder();
+  }
+
+  /**
+   * The Codenvy Permissions builder
+   *
+   * @return {CodenvyPermissionsBuilder}
+   */
+  getPermissionsBuilder() {
+    return new CodenvyPermissionsBuilder();
+  }
+
+  /**
+   * The Codenvy Resources builder
+   *
+   * @return {CodenvyResourceBuilder}
+   */
+  getResourceBuilder() {
+    return new CodenvyResourceBuilder();
   }
 }

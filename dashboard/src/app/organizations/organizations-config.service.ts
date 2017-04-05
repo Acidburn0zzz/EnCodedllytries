@@ -42,6 +42,10 @@ export class OrganizationsConfigService {
    * Organization resources API interaction.
    */
   private codenvyResourcesDistribution: CodenvyResourcesDistribution;
+  /**
+   * User profile API interaction.
+   */
+  private cheProfile: any;
 
   /** Default constructor that is using resource injection
    * @ngInject for Dependency injection
@@ -51,13 +55,29 @@ export class OrganizationsConfigService {
               $route: ng.route.IRouteService,
               codenvyOrganization: CodenvyOrganization,
               codenvyPermissions: CodenvyPermissions,
-              codenvyResourcesDistribution: CodenvyResourcesDistribution) {
+              codenvyResourcesDistribution: CodenvyResourcesDistribution,
+              cheProfile: any) {
+
     this.$log = $log;
     this.$q = $q;
     this.$route = $route;
     this.codenvyOrganization = codenvyOrganization;
     this.codenvyPermissions = codenvyPermissions;
     this.codenvyResourcesDistribution = codenvyResourcesDistribution;
+    this.cheProfile = cheProfile;
+  }
+
+  /**
+   * Prints error message.
+   *
+   * @param {any} error error object or string
+   */
+  logError(error: any): void {
+    if (!error) {
+      return;
+    }
+    const message = error.data && error.data.message ? error.data.message : error;
+    this.$log.error(message);
   }
 
   waitAll(promises: Array<ng.IPromise<any>>): ng.IPromise<any> {
@@ -101,12 +121,12 @@ export class OrganizationsConfigService {
       this.codenvyOrganization.fetchOrganizations().then(() => {
         const organization = this.codenvyOrganization.getOrganizationByName(name);
         if (organization) {
-          defer.resolve(organization);
-        } else {
-          defer.reject(`Organization "${name}" is not found.`);
+          this.logError(`Organization "${name}" is not found.`);
         }
+        defer.resolve(organization);
       }, (error: any) => {
-        defer.reject(error);
+        this.logError(error);
+        defer.resolve(null);
       });
     }
 
@@ -124,13 +144,14 @@ export class OrganizationsConfigService {
 
     const permissions = this.codenvyPermissions.getOrganizationPermissions(id);
     if (permissions) {
-      defer.resolve();
+      defer.resolve(permissions);
     } else {
       this.codenvyPermissions.fetchOrganizationPermissions(id).then(() => {
-        defer.resolve();
+        const permissions = this.codenvyPermissions.getOrganizationPermissions(id);
+        defer.resolve(permissions);
       }, (error: any) => {
         this.logError(error);
-        defer.resolve();
+        defer.resolve(null);
       })
     }
 
@@ -148,13 +169,14 @@ export class OrganizationsConfigService {
 
     const resources = this.codenvyResourcesDistribution.getOrganizationResources(id);
     if (resources) {
-      defer.resolve();
+      defer.resolve(resources);
     } else {
       this.codenvyResourcesDistribution.fetchOrganizationResources(id).then(() => {
-        defer.resolve();
+        const resources = this.codenvyResourcesDistribution.getOrganizationResources(id);
+        defer.resolve(resources);
       }, (error: any) => {
         this.logError(error);
-        defer.resolve();
+        defer.resolve(null);
       })
     }
 
@@ -172,10 +194,11 @@ export class OrganizationsConfigService {
 
     const resources = this.codenvyResourcesDistribution.getTotalOrganizationResources(id);
     if (resources) {
-      defer.resolve();
+      defer.resolve(resources);
     } else {
       this.codenvyResourcesDistribution.fetchTotalOrganizationResources(id).then(() => {
-        defer.resolve();
+        const resources = this.codenvyResourcesDistribution.getTotalOrganizationResources(id);
+        defer.resolve(resources);
       }, (error: any) => {
         this.logError(error);
         defer.resolve();
@@ -186,15 +209,131 @@ export class OrganizationsConfigService {
   }
 
   /**
-   * Prints error message.
+   * Returns promise to resolve route for organization details page.
    *
-   * @param {any} error error object or string
+   * @returns {ng.IPromise<any>}
    */
-  logError(error: any): void {
-    if (!error) {
-      return;
-    }
-    const message = error.data && error.data.message ? error.data.message : error;
-    this.$log.error(message);
+  resolveOrganizationDetailsRoute(): ng.IPromise<any> {
+    const name = this.$route.current.params.organizationName;
+    const promises = [];
+
+    const organizationPromise = this.getOrFetchOrganizationByName(name);
+
+    // current organization permissions
+    const permissionsPromise = organizationPromise.then((organization: codenvy.IOrganization) => {
+      if (organization && organization.id) {
+        return this.getOrFetchOrganizationPermissions(organization.id);
+      }
+      return this.$q.when();
+    });
+    promises.push(permissionsPromise);
+
+    // parent organization permissions
+    const parentOrgPermissionsPromise = organizationPromise.then((organization: codenvy.IOrganization) => {
+      if (organization && organization.parent) {
+        return this.getOrFetchOrganizationPermissions(organization.parent);
+      }
+      return this.$q.when();
+    });
+    promises.push(parentOrgPermissionsPromise);
+
+    const resourcesPromise = organizationPromise.then((organization: codenvy.IOrganization) => {
+      if (!organization) {
+        return this.$q.when();
+      }
+      if (organization.parent) {
+        return this.getOrFetchOrganizationResources(organization.id);
+      } else {
+        return this.getOrFetchTotalOrganizationResources(organization.id);
+      }
+    });
+    promises.push(resourcesPromise);
+
+    return this.waitAll(promises).then(() => {
+      return organizationPromise;
+    });
   }
+
+  /**
+   * Returns promise to resolve route for create organization page.
+   *
+   * @returns {ng.IPromise<any>}
+   */
+  resolveCreateOrganizationRoute(): ng.IPromise<any> {
+    const parentQualifiedNameDefer = this.$q.defer();
+    const parentIdDefer = this.$q.defer();
+    const parentMembersDefer = this.$q.defer();
+
+    parentQualifiedNameDefer.resolve(this.$route.current.params.parentQualifiedName || '');
+    parentQualifiedNameDefer.promise.then(
+      (name: string) => {
+        return this.getOrFetchOrganizationByName(name);
+      }
+    ).then(
+      /* resolve parent organization ID */
+      (organization: codenvy.IOrganization) => {
+        const id = organization ? organization.id : '';
+        parentIdDefer.resolve(id);
+
+        if (!organization) {
+          return this.$q.reject();
+        } else {
+          return this.getOrFetchOrganizationPermissions(id);
+        }
+      }, (error: any) => {
+        this.logError(error);
+        parentIdDefer.resolve('');
+        parentMembersDefer.resolve([]);
+        return this.$q.reject(error);
+      }
+    ).then(
+      /* fetch parent organization members */
+      (permissions: Array<condenvy.IPermissions>) => {
+        const userPromises = [];
+
+        if (permissions && permissions.length) {
+          permissions.forEach((permission: any) => {
+            const userId = permission.userId;
+            const user = this.cheProfile.getProfileFromId(userId);
+
+            if (user) {
+              userPromises.push(this.$q.when(user));
+            } else {
+              const userPromise = this.cheProfile.fetchProfileId(userId).then(() => {
+                return this.cheProfile.getProfileFromId(userId);
+              });
+              userPromises.push(userPromise);
+            }
+          });
+        }
+
+        return this.$q.all(userPromises);
+      }, (error: any) => {
+        this.logError(error);
+        parentMembersDefer.resolve([]);
+        return this.$q.reject();
+      }
+    ).then(
+      /* resolve parent organization members */
+      (userResults: any[]) => {
+        const userEmails = userResults.map((user: any) => {
+          return user.email;
+        });
+
+        parentMembersDefer.resolve(userEmails);
+      }, (error: any) => {
+        this.logError(error);
+        parentMembersDefer.resolve([]);
+      }
+    );
+
+    return this.$q.all([parentQualifiedNameDefer.promise, parentIdDefer.promise, parentMembersDefer.promise]).then((results: any[]) => {
+      return {
+        parentQualifiedName: results[0],
+        parentOrganizationId: results[1],
+        parentOrganizationMembers: results[2]
+      };
+    });
+  }
+
 }

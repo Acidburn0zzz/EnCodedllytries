@@ -60,15 +60,7 @@ declare namespace _codenvy {
     permissions?: IPermissions;
   }
 
-  export interface IUser {
-    attributes: {
-      firstName?: string;
-      lastName?: string;
-      [propName: string]: string | number;
-    };
-    email: string;
+  export interface IUser extends che.IUser{
     links: Array<ILink>;
-    name: string;
-    userId: string;
   }
 }

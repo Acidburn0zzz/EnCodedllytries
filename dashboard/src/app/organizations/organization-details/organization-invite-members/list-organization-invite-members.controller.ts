@@ -55,6 +55,14 @@ export class ListOrganizationInviteMembersController {
    * List of members to be invited.
    */
   private members: Array<codenvy.IMember>;
+  /**
+   * Parent organization ID
+   */
+  private parentOrganizationId: string;
+  /**
+   * Members list of parent organization.
+   */
+  private parentOrganizationMembers: string[];
 
   /**
    * Default constructor that is using resource
@@ -180,6 +188,8 @@ export class ListOrganizationInviteMembersController {
       locals: {
         members: this.members,
         member: null,
+        parentOrganizationId: this.parentOrganizationId,
+        parentOrganizationMembers: this.parentOrganizationMembers,
         callbackController: this
       },
       templateUrl: 'app/organizations/organization-details/organization-member-dialog/organization-member-dialog.html'

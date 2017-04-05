@@ -35,6 +35,11 @@ describe('CodenvyTeam', () => {
   let cheAPIBuilder;
 
   /**
+   * Che backend
+   */
+  let cheHttpBackend;
+
+  /**
    * codenvy API builder.
    */
   let codenvyAPIBuilder;
@@ -47,7 +52,7 @@ describe('CodenvyTeam', () => {
   /**
    * Codenvy backend
    */
-  let codenvyBackend;
+  let codenvyHttpBackend;
 
   /**
    *  setup module
@@ -57,12 +62,13 @@ describe('CodenvyTeam', () => {
   /**
    * Inject factory and http backend
    */
-  beforeEach(inject((codenvyTeam, cheUser, _cheAPIBuilder_, _codenvyAPIBuilder_, codenvyHttpBackend) => {
+  beforeEach(inject((codenvyTeam, cheUser, _cheAPIBuilder_, _cheHttpBackend_, _codenvyAPIBuilder_, _codenvyHttpBackend_) => {
     factory = codenvyTeam;
     userFactory = cheUser;
     cheAPIBuilder = _cheAPIBuilder_;
+    cheHttpBackend = _cheHttpBackend_;
     codenvyAPIBuilder = _codenvyAPIBuilder_;
-    codenvyBackend = codenvyHttpBackend;
+    codenvyHttpBackend = _codenvyHttpBackend_;
     httpBackend = codenvyHttpBackend.getHttpBackend();
   }));
 
@@ -91,10 +97,10 @@ describe('CodenvyTeam', () => {
 
       // providing request
       // add test user on Http backend
-      codenvyBackend.setDefaultUser(testUser);
+      cheHttpBackend.setDefaultUser(testUser);
 
       // setup backend for users
-      codenvyBackend.usersBackendSetup();
+      cheHttpBackend.usersBackendSetup();
 
       /* team setup */
 
@@ -105,10 +111,10 @@ describe('CodenvyTeam', () => {
       let testTeam = codenvyAPIBuilder.getTeamBuilder().withId(teamId).withName(teamName).build();
 
       // add test team on Http backend
-      codenvyBackend.addTeamById(testTeam);
+      codenvyHttpBackend.addTeamById(testTeam);
 
       // setup backend for teams
-      codenvyBackend.teamsBackendSetup();
+      codenvyHttpBackend.teamsBackendSetup();
 
       /* fulfil all requests */
       httpBackend.flush();
