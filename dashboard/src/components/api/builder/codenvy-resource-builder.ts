@@ -33,7 +33,11 @@ export class CodenvyResourceBuilder {
    * Default constructor
    */
   constructor() {
-    this.resource = [];
+    this.resource = {
+      type: '',
+      amount: 0,
+      unit: ''
+    };
   }
 
   /**
@@ -53,7 +57,7 @@ export class CodenvyResourceBuilder {
    * @param {number} amount resource's amount
    * @return {CodenvyResourceBuilder}
    */
-  withAmount(amount: string): CodenvyResourceBuilder {
+  withAmount(amount: number): CodenvyResourceBuilder {
     this.resource.amount = amount;
     return this;
   }

@@ -172,6 +172,7 @@
         <list-organization-members
           ng-if="organizationDetailsController.organization && organizationDetailsController.organization.id"
           organization="organizationDetailsController.organization"
+          parent-organization-members="organizationDetailsController.parentOrganizationMembers"
           editable="organizationDetailsController.isUserAllowedTo(organizationDetailsController.SET_PERMISSIONS)"></list-organization-members>
       </md-tab-body>
     </md-tab>

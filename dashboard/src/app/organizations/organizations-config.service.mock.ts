@@ -63,6 +63,10 @@ export class OrganizationsConfigServiceMock {
     const user = this.buildUser(suffix);
     const profile = this.cheAPIBuilder.getProfileBuilder().withId(user.id).withEmail(user.email).withFirstName(user.firstName).withLastName(user.lastName).build();
 
+    if (isDefault) {
+      this.cheHttpBackend.addDefaultProfile(profile);
+    }
+
     this.cheHttpBackend.addProfileId(profile);
   }
 
@@ -72,9 +76,8 @@ export class OrganizationsConfigServiceMock {
 
     if (isDefault) {
       this.cheHttpBackend.setDefaultUser(testUser);
-    } else {
-      this.cheHttpBackend.addUserById(testUser);
     }
+    this.cheHttpBackend.addUserById(testUser);
 
     this.users.push(testUser);
     return testUser;
@@ -85,7 +88,9 @@ export class OrganizationsConfigServiceMock {
     const name = `testOrgName_${suffix}`;
     const qualifiedName = (parent ? parent.qualifiedName + '/' : '') + name;
 
-    const testOrganization = this.codenvyAPIBuilder.getOrganizationsBuilder().withId(id).withName(name).withQualifiedName(qualifiedName).build();
+    const testOrganization = parent
+      ? this.codenvyAPIBuilder.getOrganizationsBuilder().withId(id).withName(name).withQualifiedName(qualifiedName).withParentId(parent.id).build()
+      : this.codenvyAPIBuilder.getOrganizationsBuilder().withId(id).withName(name).withQualifiedName(qualifiedName).build();
 
     this.codenvyHttpBackend.addOrganizationById(testOrganization);
 
@@ -108,7 +113,7 @@ export class OrganizationsConfigServiceMock {
   private addResource(organization: any, scope: string, resource: any): void {
     const testResource = this.codenvyAPIBuilder.getResourceBuilder().withAmount(resource.amount).withType(resource.type).withUnit(resource.unit).build();
 
-    this.codenvyHttpBackend.addResource(organization.id, scope, resource);
+    this.codenvyHttpBackend.addResource(organization.id, scope, testResource);
   }
 
   mockData(): void {
@@ -169,9 +174,13 @@ export class OrganizationsConfigServiceMock {
     [user1, user2].forEach((user: any) => {
       this.addPermission(org2, user);
     });
-    // add resources
+    // add total resources
     totalResources.forEach((resource: any) => {
       this.addResource(org2, 'total', resource);
+    });
+    //  add distributed resources
+    totalResources.forEach((resoruce: any) => {
+      this.addResource(org2, 'distributed', resoruce);
     });
 
     // build all backends at once

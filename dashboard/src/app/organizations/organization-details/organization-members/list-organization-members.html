@@ -7,7 +7,7 @@
                    che-search-model="listOrganizationMembersController.memberFilter.name"
                    che-hide-search="listOrganizationMembersController.members.length === 0"
                    che-add-button-title="Add Member"
-                   che-on-add="listOrganizationMembersController.showMemberDialog(null)"
+                   che-on-add="listOrganizationMembersController.selectAddMemberDialog(null)"
                    che-hide-add="!listOrganizationMembersController.hasUpdatePermission"
                    che-delete-button-title="Delete"
                    che-on-delete="listOrganizationMembersController.removeSelectedMembers()"
@@ -58,10 +58,10 @@
            class="che-list-item-row member-list-row">
         <div ng-if="listOrganizationMembersController.hasUpdatePermission"
              layout="row" layout-align="start center" class="che-checkbox-area">
-          <che-list-item-checked ng-model="listOrganizationMembersController.membersSelectedStatus[member.userId]"
+          <che-list-item-checked ng-model="listOrganizationMembersController.membersSelectedStatus[member.id]"
                                  ng-click="listOrganizationMembersController.updateSelectedStatus()"
                                  ng-show="!listOrganizationMembersController.isOwner(member)"
-                                 che-aria-label-checkbox="member {{member.userId}}"></che-list-item-checked>
+                                 che-aria-label-checkbox="member {{member.id}}"></che-list-item-checked>
         </div>
         <div flex
              layout-xs="column" layout-gt-xs="row"

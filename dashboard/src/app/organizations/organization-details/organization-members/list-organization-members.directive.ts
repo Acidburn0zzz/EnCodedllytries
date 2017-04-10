@@ -38,6 +38,7 @@ export class ListOrganizationMembers implements ng.IDirective {
 
   scope: any = {
     editable: '=',
-    organization: '='
+    organization: '=',
+    parentOrganizationMembers: '='
   };
 }

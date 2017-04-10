@@ -166,6 +166,12 @@ export class CodenvyHttpBackend {
     for (let organizationId of keys) {
       const organizationResourcesMap = this.resourcesMap.get(organizationId);
 
+      // distributed
+      if (organizationResourcesMap.has('distributed')) {
+        const resources = organizationResourcesMap.get('distributed');
+        this.httpBackend.when('GET', `/api/organization/resource/${organizationId}/cap`).respond(resources);
+      }
+
       // total
       if (organizationResourcesMap.has('total')) {
         const resources = organizationResourcesMap.get('total');

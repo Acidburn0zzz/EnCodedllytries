@@ -82,11 +82,11 @@ export class OrganizationMemberDialogController {
   /**
    * Role to be used, may be <code>null</code> if role is needed to be set. (Comes from outside)
    */
-  private role: any;
+  private role: string;
   /**
    * Choosen role for user.
    */
-  private newRole: any;
+  private newRole: string;
   /**
    * Dialog window title.
    */
@@ -121,24 +121,44 @@ export class OrganizationMemberDialogController {
     // role is set, need to add only user with this role:
     if (this.role) {
       this.email = '';
-      this.title = 'Add new ' + this.role.title.toLowerCase();
+      this.title = 'Add new ' + CodenvyOrganizationRoles[this.role].title.toLowerCase();
       this.buttonTitle = 'Add';
       return;
     }
 
-    this.roles = CodenvyOrganizationRoles.getValues();
+    this.roles = CodenvyOrganizationRoles.getRoles();
     if (this.member) {
       this.title = 'Edit ' + this.member.name + ' roles';
       this.buttonTitle = 'Save';
       this.email = this.member.email;
       let roles = codenvyOrganization.getRolesFromActions(this.member.permissions.actions);
-      this.newRole = (roles && roles.length > 0) ? angular.toJson(roles[0]) : angular.toJson(CodenvyOrganizationRoles.MEMBER);
+      this.newRole = (roles && roles.length > 0) ? roles[0].name : CodenvyOrganizationRoles.MEMBER.name;
     } else {
       this.email = '';
       this.title = 'Invite member to collaborate';
       this.buttonTitle = 'Add';
-      this.newRole = angular.toJson(CodenvyOrganizationRoles.MEMBER);
+      this.newRole = CodenvyOrganizationRoles.MEMBER.name;
     }
+  }
+
+  /**
+   * Returns title of specified role.
+   *
+   * @param {string} roleName
+   * @returns {string}
+   */
+  getRoleTitle(roleName: string): string {
+    return CodenvyOrganizationRoles[roleName].title;
+  }
+
+  /**
+   * Returns description of specified role.
+   *
+   * @param {string} roleName
+   * @returns {string}
+   */
+  getRoleDescription(roleName: string): string {
+    return CodenvyOrganizationRoles[roleName].description;
   }
 
   /**
@@ -155,7 +175,7 @@ export class OrganizationMemberDialogController {
    * @returns {boolean} true if pointed email(s) are valid and not in the list yet
    */
   isValidEmail(value: string): boolean {
-    let emails = value.replace(/ /g, ',').split(',');
+    let emails = value.replace(/\s*,?\s+/g, ',').split(',');
     for (let i = 0; i < emails.length; i++) {
       // email is valid
       let email = emails[i];
@@ -184,8 +204,8 @@ export class OrganizationMemberDialogController {
    * Adds new member.
    */
   addMembers(): void {
-    let userRoles = this.role ? [this.role] : [angular.fromJson(this.newRole)];
-    let emails = this.email.replace(/ /g, ',').split(',');
+    let userRoleName = this.role ? this.role : this.newRole;
+    let emails = this.email.replace(/\s*,?\s+/g, ',').split(',');
     // form the list of emails without duplicates and empty values:
     let resultEmails = emails.reduce((array: Array<string>, element: string) => {
       if (array.indexOf(element) < 0 && element.length > 0) {
@@ -201,7 +221,7 @@ export class OrganizationMemberDialogController {
     });
 
     this.$q.all(promises).then(() => {
-      this.finishAdding(users, userRoles);
+      this.finishAdding(users, userRoleName);
     });
   }
 
@@ -237,42 +257,28 @@ export class OrganizationMemberDialogController {
    * Returns the actions of current chosen roles.
    */
   getCurrentActions(): Array<string> {
-    let userRoles = this.role ? [this.role] : [angular.fromJson(this.newRole)];
+    let userRoleName = this.role ? this.role : this.newRole;
     let processedActions = [];
-    this.roles.forEach((role: any) => {
+    this.roles.forEach((roleName: string) => {
+      const role = CodenvyOrganizationRoles[roleName];
       processedActions = processedActions.concat(role.actions);
     });
 
     let actions = this.member ? this.member.permissions.actions : [];
     let otherActions = this.lodash.difference(actions, processedActions);
 
-    return this.lodash.uniq(this.getActionsFromRoles(userRoles).concat(otherActions));
-  }
-
-  /**
-   * Forms the list actions based on the list of roles.
-   *
-   * @param roles array of roles
-   * @returns {Array<string>} actions array
-   */
-  getActionsFromRoles(roles: Array<any>): Array<string> {
-    let actions = [];
-    roles.forEach((role: any) => {
-      actions = actions.concat(role.actions);
-    });
-
-    return actions;
+    return this.lodash.uniq(CodenvyOrganizationRoles[userRoleName].actions.concat(otherActions));
   }
 
   /**
    * Finish adding user state.
    *
-   * @param users users to be added
-   * @param roles user's roles
+   * @param {Array<any>} users users to be added
+   * @param {sring} role user's role
    */
-  finishAdding(users: Array<any>, roles: any): void {
+  finishAdding(users: Array<any>, role: string): void {
     this.isProcessing = false;
-    this.callbackController.addMembers(users, roles);
+    this.callbackController.addMembers(users, role);
     this.hide();
   }
 

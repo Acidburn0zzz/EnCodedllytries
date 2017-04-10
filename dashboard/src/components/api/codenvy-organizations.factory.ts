@@ -211,19 +211,19 @@ export class CodenvyOrganization {
    * Forms the list of roles based on the list of actions
    *
    * @param actions array of actions
-   * @returns {Array<any>} array of roles
+   * @returns {Array<codenvy.IRole>} array of roles
    */
-  getRolesFromActions(actions: Array<string>): Array<any> {
+  getRolesFromActions(actions: Array<string>): Array<codenvy.IRole> {
     let roles = [];
-    let teamRoles = CodenvyOrganizationRoles.getValues();
-    teamRoles.forEach((role: any) => {
+    let organizationRoles = CodenvyOrganizationRoles.getValues();
+    organizationRoles.forEach((role: codenvy.IRole) => {
       if (this.lodash.difference(role.actions, actions).length === 0) {
         roles.push(role);
       }
     });
 
     // avoid roles intake (filter if any role's action is subset of any other):
-    roles = this.lodash.filter(roles, (role: any) => {
+    roles = this.lodash.filter(roles, (role: codenvy.IRole) => {
       return !this._checkIsSubset(role, roles);
     });
 
@@ -254,10 +254,10 @@ export class CodenvyOrganization {
   /**
    * Forms the list actions based on the list of roles.
    *
-   * @param roles array of roles
+   * @param {Array<codenvy.IRole>} roles array of roles
    * @returns {Array<string>} actions array
    */
-  getActionsFromRoles(roles: Array<any>): Array<string> {
+  getActionsFromRoles(roles: Array<codenvy.IRole>): Array<string> {
     let actions = [];
     roles.forEach((role: any) => {
       actions = actions.concat(role.actions);

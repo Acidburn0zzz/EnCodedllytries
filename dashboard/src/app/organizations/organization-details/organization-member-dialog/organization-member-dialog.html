@@ -23,9 +23,9 @@
                            ng-if="!organizationMemberDialogController.role">
         <div layout="column">
           <md-radio-group ng-model="organizationMemberDialogController.newRole">
-            <div ng-repeat="roleInfo in organizationMemberDialogController.roles" layout="row">
-              <md-radio-button value="{{roleInfo}}">{{roleInfo.title}}</md-radio-button>
-              <span class="member-role-description">({{roleInfo.description}})</span>
+            <div ng-repeat="roleName in organizationMemberDialogController.roles" layout="row">
+              <md-radio-button value="{{roleName}}">{{organizationMemberDialogController.getRoleTitle(roleName)}}</md-radio-button>
+              <span class="member-role-description">({{organizationMemberDialogController.getRoleDescription(roleName)}})</span>
             </div>
           </md-radio-group>
         </div>

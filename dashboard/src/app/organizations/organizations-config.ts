@@ -28,6 +28,8 @@ import {OrganizationMemberDialogController} from './organization-details/organiz
 import {OrganizationsPermissionService} from './organizations-permission.service';
 import {OrganizationsConfigService} from './organizations-config.service';
 import {OrganizationNotFound} from './organization-details/organization-not-found/organization-not-found.directive';
+import {OrganizationSelectMembersDialogController} from './organization-details/organization-select-members-dialog/organization-select-members-dialog.controller';
+import {OrganizationMemberItem} from './organization-details/organization-select-members-dialog/organization-member-item/organization-member-item.directive';
 
 /**
  * The configuration of teams, defines controllers, directives and routing.
@@ -62,6 +64,9 @@ export class OrganizationsConfig {
 
     register.directive('organizationNotFound', OrganizationNotFound);
 
+    register.controller('OrganizationSelectMembersDialogController', OrganizationSelectMembersDialogController);
+    register.directive('organizationMemberItem', OrganizationMemberItem);
+
     const organizationDetailsLocationProvider = {
       title: (params: any) => {
         return params.organizationName;
@@ -71,7 +76,7 @@ export class OrganizationsConfig {
       controller: 'OrganizationDetailsController',
       controllerAs: 'organizationDetailsController',
       resolve: {
-        organization: ['organizationsConfigService', (organizationConfigService: OrganizationsConfigService) => {
+        initData: ['organizationsConfigService', (organizationConfigService: OrganizationsConfigService) => {
           return organizationConfigService.resolveOrganizationDetailsRoute();
         }],
       }

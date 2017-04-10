@@ -51,16 +51,21 @@ declare namespace _codenvy {
     actions: Array<string>;
     description: string;
     title: string;
+    name: string;
   }
 
-  export interface IMember extends IUser {
+  export interface IMember extends che.IProfile {
     id: string;
-    role?: string;
     roles?: Array<IRole>;
+    /**
+     * Role name
+     */
+    role?: string;
     permissions?: IPermissions;
+    name?: string;
   }
 
   export interface IUser extends che.IUser{
-    links: Array<ILink>;
+    links?: Array<ILink>;
   }
 }

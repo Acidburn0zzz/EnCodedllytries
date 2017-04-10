@@ -39,7 +39,7 @@ export class ListOrganizationInviteMembers implements ng.IDirective {
 
   scope: any = {
     members: '=',
-    parentOrganizationId: '@parentOrganizationId',
-    parentOrganizationMembers: '=parentOrganizationMembers'
+    parentOrganizationId: '=',
+    parentOrganizationMembers: '='
   };
 }
