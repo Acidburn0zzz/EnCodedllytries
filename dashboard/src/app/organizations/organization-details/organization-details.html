@@ -191,9 +191,6 @@
         <list-organizations is-loading="organizationsController.isInfoLoading"
                             on-update="organizationDetailsController.fetchOrganizations()"
                             organizations="organizationDetailsController.getSubOrganizations()"></list-organizations>
-        <div class="che-list-empty">
-          <span ng-show="organizationDetailsController.getSubOrganizations().length === 0">There are no sub-organizations.</span>
-        </div>
       </md-tab-body>
     </md-tab>
 

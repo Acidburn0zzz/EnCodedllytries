@@ -1,6 +1,6 @@
 <md-content flex class="list-organizations-content">
   <div class="list-organizations">
-    <che-list-header che-hide-header="!listOrganizationsController.organizations || listOrganizationsController.organizations.length === 0"
+    <che-list-header che-hide-header="!listOrganizationsController.organizations || (listOrganizationsController.organizations | filter:listOrganizationsController.organizationFilter).length === 0"
                      che-input-placeholder="Search"
                      che-search-model="listOrganizationsController.organizationFilter.name"
                      che-hide-search="!listOrganizationsController.organizations || listOrganizationsController.organizations.length === 0"
@@ -58,5 +58,8 @@
         cdvy-on-checkbox-click="listOrganizationsController.updateSelectedStatus()">
       </organizations-item>
     </che-list>
+  </div>
+  <div class="che-list-empty">
+    <span ng-show="(listOrganizationsController.organizations | filter:listOrganizationsController.organizationFilter).length === 0">There are no organizations.</span>
   </div>
 </md-content>
