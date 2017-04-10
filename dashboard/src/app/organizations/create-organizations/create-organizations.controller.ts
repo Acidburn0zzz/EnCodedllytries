@@ -70,7 +70,7 @@ export class CreateOrganizationController {
   /**
    * List of members of parent organization.
    */
-  private parentOrganizationMembers: string[];
+  private parentOrganizationMembers: Array<che.IUser>;
 
   /**
    * Default constructor

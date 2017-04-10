@@ -149,9 +149,10 @@ describe('OrganizationsConfig >', () => {
       const organizations = mock.getOrganizations();
       const parentOrg = organizations[0];
       const users = mock.getUsersByOrganizationId(parentOrg.id);
-      const emails = users.map((user: any) => {
-        return user.email;
-      });
+      const buildIdsList = (res: string[], user: che.IUser) => {
+        res.push(user.id);
+        return res;
+      };
 
       $route.current.params.parentQualifiedName = parentOrg.qualifiedName;
       const route = $route.routes['/admin/create-organization/:parentQualifiedName*'];
@@ -159,12 +160,20 @@ describe('OrganizationsConfig >', () => {
 
       // stub functions
       const callbacks = {
-        testResolve: () => { },
+        testResolve: (data: any) => {
+          expect(data.parentQualifiedName).toEqual(parentOrg.qualifiedName);
+          expect(data.parentOrganizationId).toEqual(parentOrg.id);
+          expect(data.parentOrganizationMembers.length).toEqual(users.length);
+
+          const parentMemberIds = data.parentOrganizationMembers.reduce(buildIdsList, []).sort();
+          const userIds = users.reduce(buildIdsList, []).sort();
+          expect(parentMemberIds).toEqual(userIds);
+        },
         testReject: () => { }
       };
 
       // create spies
-      spyOn(callbacks, 'testResolve');
+      spyOn(callbacks, 'testResolve').and.callThrough();
       spyOn(callbacks, 'testReject');
 
       const service = $injector.invoke(resolveBlock);
@@ -175,11 +184,7 @@ describe('OrganizationsConfig >', () => {
 
       $httpBackend.flush();
 
-      expect(callbacks.testResolve).toHaveBeenCalledWith({
-        parentQualifiedName: parentOrg.qualifiedName,
-        parentOrganizationId: parentOrg.id,
-        parentOrganizationMembers: emails
-      });
+      expect(callbacks.testResolve).toHaveBeenCalled();
       expect(callbacks.testReject).not.toHaveBeenCalled();
     });
 
@@ -265,14 +270,16 @@ describe('OrganizationsConfig >', () => {
 
       $route.current.params.organizationName = parentOrg.qualifiedName;
       const route = $route.routes['/organization/:organizationName*'];
-      const resolveBlock = route.resolve.organization;
+      const resolveBlock = route.resolve.initData;
 
       // stub functions
       const callbacks = {
-        testResolve: (organization: any) => {
+        testResolve: (initData: any) => {
           // this is necessary because of different types
-          const equal = angular.equals(organization, parentOrg);
+          const equal = angular.equals(initData.organization, parentOrg);
           expect(equal).toBeTruthy();
+
+          expect(initData.parentOrganizationMembers).toEqual([]);
         },
         testReject: () => { }
       };
@@ -299,12 +306,13 @@ describe('OrganizationsConfig >', () => {
 
       $route.current.params.organizationName = parentOrg.qualifiedName;
       const route = $route.routes['/organization/:organizationName*'];
-      const resolveBlock = route.resolve.organization;
+      const resolveBlock = route.resolve.initData;
 
       // stub functions
       const callbacks = {
-        testResolve: (organization: any) => {
-          expect(organization).toBeFalsy();
+        testResolve: (initData: any) => {
+          expect(initData.organization).toBeFalsy();
+          expect(initData.parentOrganizationMembers).toEqual([]);
         },
         testReject: () => { }
       };
@@ -337,16 +345,29 @@ describe('OrganizationsConfig >', () => {
       // get sub-organization
       const subOrg = organizations[1];
 
+      // get parent organization users
+      const users = mock.getUsersByOrganizationId(subOrg.parent);
+      const buildIdsList = (res: string[], user: che.IUser) => {
+        res.push(user.id);
+        return res;
+      };
+
       $route.current.params.organizationName = subOrg.qualifiedName;
       const route = $route.routes['/organization/:organizationName*'];
-      const resolveBlock = route.resolve.organization;
+      const resolveBlock = route.resolve.initData;
 
       // stub functions
       const callbacks = {
-        testResolve: (organization: any) => {
+        testResolve: (initData: any) => {
           // this is necessary because of different types
-          const equal = angular.equals(organization, subOrg);
-          expect(equal).toBeTruthy();
+          const organizationsAreEqual = angular.equals(initData.organization, subOrg);
+          expect(organizationsAreEqual).toBeTruthy();
+
+          expect(initData.parentOrganizationMembers.length).toEqual(users.length);
+
+          const parentMemberIds = initData.parentOrganizationMembers.reduce(buildIdsList, []).sort();
+          const userIds = users.reduce(buildIdsList, []).sort();
+          expect(parentMemberIds).toEqual(userIds);
         },
         testReject: () => { }
       };
@@ -373,12 +394,13 @@ describe('OrganizationsConfig >', () => {
 
       $route.current.params.organizationName = subOrg.qualifiedName;
       const route = $route.routes['/organization/:organizationName*'];
-      const resolveBlock = route.resolve.organization;
+      const resolveBlock = route.resolve.initData;
 
       // stub functions
       const callbacks = {
-        testResolve: (organization: any) => {
-          expect(organization).toBeFalsy();
+        testResolve: (initData: any) => {
+          expect(initData.organization).toBeFalsy();
+          expect(initData.parentOrganizationMembers).toEqual([]);
         },
         testReject: () => { }
       };

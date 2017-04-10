@@ -45,7 +45,7 @@ export class OrganizationsConfigService {
   /**
    * User profile API interaction.
    */
-  private cheProfile: any;
+  private cheUser: any;
 
   /** Default constructor that is using resource injection
    * @ngInject for Dependency injection
@@ -56,7 +56,7 @@ export class OrganizationsConfigService {
               codenvyOrganization: CodenvyOrganization,
               codenvyPermissions: CodenvyPermissions,
               codenvyResourcesDistribution: CodenvyResourcesDistribution,
-              cheProfile: any) {
+              cheUser: any) {
 
     this.$log = $log;
     this.$q = $q;
@@ -64,7 +64,7 @@ export class OrganizationsConfigService {
     this.codenvyOrganization = codenvyOrganization;
     this.codenvyPermissions = codenvyPermissions;
     this.codenvyResourcesDistribution = codenvyResourcesDistribution;
-    this.cheProfile = cheProfile;
+    this.cheUser = cheUser;
   }
 
   /**
@@ -120,7 +120,7 @@ export class OrganizationsConfigService {
     } else {
       this.codenvyOrganization.fetchOrganizations().then(() => {
         const organization = this.codenvyOrganization.getOrganizationByName(name);
-        if (organization) {
+        if (!organization) {
           this.logError(`Organization "${name}" is not found.`);
         }
         defer.resolve(organization);
@@ -209,34 +209,53 @@ export class OrganizationsConfigService {
   }
 
   /**
+   * Fetches users of organization.
+   * todo: get Profiles instead of Users
+   *
+   * @param {Array<codenvy.IPermission>} permissions
+   * @return {IPromise<any>}
+   */
+  getOrFetchOrganizationUsers(permissions: Array<codenvy.IPermissions>): ng.IPromise<any> {
+    const userPromises = [];
+
+    if (permissions && permissions.length) {
+      permissions.forEach((permission: any) => {
+        const userId = permission.userId;
+        const user = this.cheUser.getUserFromId(userId);
+
+        if (user) {
+          userPromises.push(this.$q.when(user));
+        } else {
+          const userPromise = this.cheUser.fetchUserId(userId).then(() => {
+            return this.cheUser.getUserFromId(userId);
+          });
+          userPromises.push(userPromise);
+        }
+      });
+    }
+
+    return this.$q.all(userPromises);
+  }
+
+  /**
    * Returns promise to resolve route for organization details page.
    *
    * @returns {ng.IPromise<any>}
    */
   resolveOrganizationDetailsRoute(): ng.IPromise<any> {
     const name = this.$route.current.params.organizationName;
-    const promises = [];
 
     const organizationPromise = this.getOrFetchOrganizationByName(name);
 
-    // current organization permissions
+    // get current organization permissions
     const permissionsPromise = organizationPromise.then((organization: codenvy.IOrganization) => {
       if (organization && organization.id) {
         return this.getOrFetchOrganizationPermissions(organization.id);
       }
       return this.$q.when();
     });
-    promises.push(permissionsPromise);
 
-    // parent organization permissions
-    const parentOrgPermissionsPromise = organizationPromise.then((organization: codenvy.IOrganization) => {
-      if (organization && organization.parent) {
-        return this.getOrFetchOrganizationPermissions(organization.parent);
-      }
-      return this.$q.when();
-    });
-    promises.push(parentOrgPermissionsPromise);
-
+    // get current organization resources
     const resourcesPromise = organizationPromise.then((organization: codenvy.IOrganization) => {
       if (!organization) {
         return this.$q.when();
@@ -247,10 +266,41 @@ export class OrganizationsConfigService {
         return this.getOrFetchTotalOrganizationResources(organization.id);
       }
     });
-    promises.push(resourcesPromise);
 
-    return this.waitAll(promises).then(() => {
-      return organizationPromise;
+    // fetch parent organization members
+    const parentMembersDefer = this.$q.defer();
+    const parentOrgPermissionsPromise = organizationPromise.then((organization: codenvy.IOrganization) => {
+      if (organization && organization.parent) {
+        return this.getOrFetchOrganizationPermissions(organization.parent);
+      }
+      return this.$q.reject();
+    });
+    parentOrgPermissionsPromise.then(
+      /* fetch parent organization members */
+      (permissions: Array<condenvy.IPermissions>) => {
+        return this.getOrFetchOrganizationUsers(permissions);
+      }, (error: any) => {
+        this.logError(error);
+        parentMembersDefer.resolve([]);
+        return this.$q.reject();
+      }
+    ).then(
+      /* resolve parent organization members */
+      (userResults: any[]) => {
+        parentMembersDefer.resolve(userResults);
+      }, (error: any) => {
+        this.logError(error);
+        parentMembersDefer.resolve([]);
+      }
+    );
+
+    return this.$q.all({
+      organization: organizationPromise,
+      organizationPermissions: permissionsPromise,
+      organizationResources: resourcesPromise,
+      parentOrganizationMembers: parentMembersDefer.promise,
+    }).then((results: any) => {
+      return results;
     });
   }
 
@@ -289,25 +339,7 @@ export class OrganizationsConfigService {
     ).then(
       /* fetch parent organization members */
       (permissions: Array<condenvy.IPermissions>) => {
-        const userPromises = [];
-
-        if (permissions && permissions.length) {
-          permissions.forEach((permission: any) => {
-            const userId = permission.userId;
-            const user = this.cheProfile.getProfileFromId(userId);
-
-            if (user) {
-              userPromises.push(this.$q.when(user));
-            } else {
-              const userPromise = this.cheProfile.fetchProfileId(userId).then(() => {
-                return this.cheProfile.getProfileFromId(userId);
-              });
-              userPromises.push(userPromise);
-            }
-          });
-        }
-
-        return this.$q.all(userPromises);
+        return this.getOrFetchOrganizationUsers(permissions);
       }, (error: any) => {
         this.logError(error);
         parentMembersDefer.resolve([]);
@@ -316,23 +348,19 @@ export class OrganizationsConfigService {
     ).then(
       /* resolve parent organization members */
       (userResults: any[]) => {
-        const userEmails = userResults.map((user: any) => {
-          return user.email;
-        });
-
-        parentMembersDefer.resolve(userEmails);
+        parentMembersDefer.resolve(userResults);
       }, (error: any) => {
         this.logError(error);
         parentMembersDefer.resolve([]);
       }
     );
 
-    return this.$q.all([parentQualifiedNameDefer.promise, parentIdDefer.promise, parentMembersDefer.promise]).then((results: any[]) => {
-      return {
-        parentQualifiedName: results[0],
-        parentOrganizationId: results[1],
-        parentOrganizationMembers: results[2]
-      };
+    return this.$q.all({
+      parentQualifiedName: parentQualifiedNameDefer.promise,
+      parentOrganizationId: parentIdDefer.promise,
+      parentOrganizationMembers: parentMembersDefer.promise
+    }).then((results: any) => {
+      return results;
     });
   }
 

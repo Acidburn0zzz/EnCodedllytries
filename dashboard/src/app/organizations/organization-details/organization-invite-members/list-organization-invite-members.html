@@ -42,6 +42,7 @@
                layout-align="start center"
                class="che-checkbox-area">
             <che-list-item-checked
+              ng-if="member.id !== listOrganizationInviteMembersController.ownerId"
               ng-model="listOrganizationInviteMembersController.membersSelectedStatus[member.email]"
               che-aria-label-checkbox="Member {{member.email}}"
               ng-click="listOrganizationInviteMembersController.updateSelectedStatus()"></che-list-item-checked>
@@ -58,16 +59,14 @@
             </div>
             <div flex="35">
               <md-radio-group ng-model="member.role"
-                              ng-change="listOrganizationInviteMembersController.onValueChanged(member)">
-                <md-radio-button
-                  value="{{listOrganizationInviteMembersController.getDeveloperRoleValue()}}"></md-radio-button>
+                              ng-change="listOrganizationInviteMembersController.onChangeMemberRole(member, role)">
+                <md-radio-button value="{{listOrganizationInviteMembersController.getDeveloperRoleValue()}}"></md-radio-button>
               </md-radio-group>
             </div>
             <div flex="35">
               <md-radio-group ng-model="member.role"
-                              ng-change="listOrganizationInviteMembersController.onValueChanged(member)">
-                <md-radio-button
-                  value="{{listOrganizationInviteMembersController.getAdminRoleValue()}}"></md-radio-button>
+                              ng-change="listOrganizationInviteMembersController.onChangeMemberRole(member)">
+                <md-radio-button value="{{listOrganizationInviteMembersController.getAdminRoleValue()}}"></md-radio-button>
               </md-radio-group>
             </div>
           </div>
@@ -80,7 +79,7 @@
     <div flex layout-align="center start">
       <che-button-default class="che-list-add-button"
                           che-button-title="Add" name="addButton"
-                          ng-click="listOrganizationInviteMembersController.showAddDialog($event)"></che-button-default>
+                          ng-click="listOrganizationInviteMembersController.selectAddMemberDialog($event)"></che-button-default>
     </div>
     <div flex-offset="5" ng-if="listOrganizationInviteMembersController.members.length > 0">
       <che-button-primary-flat ng-disabled="(listOrganizationInviteMembersController.membersSelectedNumber === 0)"

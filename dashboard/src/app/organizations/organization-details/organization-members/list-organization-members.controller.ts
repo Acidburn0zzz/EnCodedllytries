@@ -17,6 +17,7 @@ import {CodenvyPermissions} from '../../../../components/api/codenvy-permissions
 import {CodenvyOrganization} from '../../../../components/api/codenvy-organizations.factory';
 import {OrganizationsPermissionService} from '../../organizations-permission.service';
 import {CodenvyOrganizationActions} from '../../../../components/api/codenvy-organization-actions';
+import {CodenvyOrganizationRoles} from '../../../../components/api/codenvy-organization-roles';
 
 /**
  * @ngdoc controller
@@ -70,9 +71,9 @@ export class ListOrganizationMembersController {
    */
   private members: Array<codenvy.IMember>;
   /**
-   * Members list of parent organization.
+   * Members list of parent organization (comes from directive's scope)
    */
-  private parentOrganizationMembers: Array<string>;
+  private parentOrganizationMembers: Array<che.IUser>;
   /**
    * Loading state of the page.
    */
@@ -130,7 +131,6 @@ export class ListOrganizationMembersController {
     this.organizationsPermissionService = organizationsPermissionService;
 
     this.members = [];
-    this.parentOrganizationMembers = [];
     this.isLoading = false;
 
     this.memberFilter = {name: ''};
@@ -140,9 +140,6 @@ export class ListOrganizationMembersController {
     this.isNoSelected = true;
 
     this.formUsersList();
-    if (this.organization.parent) {
-      this.formParentOrgMembersList();
-    }
   }
 
   /**
@@ -177,10 +174,10 @@ export class ListOrganizationMembersController {
 
     permissions.forEach((permission: any) => {
       let userId = permission.userId;
-      let user = this.cheProfile.getProfileFromId(userId);
+      let userProfile = this.cheProfile.getProfileFromId(userId);
 
-      if (user) {
-        this.formUserItem(user, permission);
+      if (userProfile) {
+        this.formUserItem(userProfile, permission);
       } else {
         this.cheProfile.fetchProfileId(userId).then(() => {
           this.formUserItem(this.cheProfile.getProfileFromId(userId), permission);
@@ -192,38 +189,17 @@ export class ListOrganizationMembersController {
   }
 
   /**
-   * Combines permissions and users data in one list.
-   */
-  formParentOrgMembersList(): void {
-    const permissions = this.codenvyPermissions.getOrganizationPermissions(this.organization.parent);
-    this.parentOrganizationMembers = [];
-
-    permissions.forEach((permission: any) => {
-      const userId = permission.userId;
-      const user = this.cheProfile.getProfileFromId(userId);
-
-      if (user) {
-        this.parentOrganizationMembers.push(user.email);
-      } else {
-        this.cheProfile.fetchProfileId(userId).then(() => {
-          const user = this.cheProfile.getProfileFromId(userId);
-          this.parentOrganizationMembers.push(user.email);
-        });
-      }
-    });
-  }
-
-  /**
    * Forms item to display with permissions and user data.
    *
-   * @param user {codenvy.IUser} data
+   * @param userProfile {che.IProfile} user's profile
    * @param permissions {codenvy.IPermissions} data
    */
-  formUserItem(user: codenvy.IUser, permissions: codenvy.IPermissions): void {
-    user.name = this.cheProfile.getFullName(user.attributes);
-    let userItem = <codenvy.IMember>angular.copy(user);
-    userItem.permissions = permissions;
-    this.members.push(userItem);
+  formUserItem(userProfile: che.IProfile, permissions: codenvy.IPermissions): void {
+    const member = <codenvy.IMember>angular.copy(userProfile);
+    member.id = userProfile.userId;
+    member.name = this.cheProfile.getFullName(userProfile.attributes);
+    member.permissions = permissions;
+    this.members.push(member);
   }
 
   /**
@@ -246,8 +222,8 @@ export class ListOrganizationMembersController {
    * Make all members in list selected.
    */
   selectAllMembers(): void {
-    this.members[this.organization.id].forEach((member: codenvy.IMember) => {
-      this.membersSelectedStatus[member.userId] = true;
+    this.members.forEach((member: codenvy.IMember) => {
+      this.membersSelectedStatus[member.id] = true;
     });
   }
 
@@ -255,8 +231,8 @@ export class ListOrganizationMembersController {
    * Make all members in list deselected.
    */
   deselectAllMembers(): void {
-    this.members[this.organization.id].forEach((member: codenvy.IMember) => {
-      this.membersSelectedStatus[member.userId] = false;
+    this.members.forEach((member: codenvy.IMember) => {
+      this.membersSelectedStatus[member.id] = false;
     });
   }
 
@@ -300,6 +276,17 @@ export class ListOrganizationMembersController {
   }
 
   /**
+   * Selects which dialog should be shown.
+   */
+  selectAddMemberDialog() {
+    if (this.organization.parent) {
+      this.showMembersListDialog();
+    } else {
+      this.showMemberDialog(null);
+    }
+  }
+
+  /**
    * Shows dialog for adding new member to the organization.
    */
   showMemberDialog(member: codenvy.IMember): void {
@@ -320,21 +307,37 @@ export class ListOrganizationMembersController {
   }
 
   /**
+   * Shows dialog to select members from list to a sub-organization.
+   *
+   */
+  showMembersListDialog(): void {
+    this.$mdDialog.show({
+      bindToController: true,
+      clickOutsideToClose: true,
+      controller: 'OrganizationSelectMembersDialogController',
+      controllerAs: 'organizationSelectMembersDialogController',
+      locals: {
+        callbackController: this,
+        parentOrganizationMembers: this.parentOrganizationMembers,
+        members: this.members,
+      },
+      templateUrl: 'app/organizations/organization-details/organization-select-members-dialog/organization-select-members-dialog.html'
+    });
+  }
+
+  /**
    * Add new members to the organization.
    *
-   * @param members members to be added
-   * @param roles member roles
+   * @param {Array<codenvy.IMember>} members members to be added
+   * @param {string} role member role
    */
-  addMembers(members: Array<codenvy.IMember>, roles: Array<any>): void {
+  addMembers(members: Array<codenvy.IMember>, role: string): void {
     let promises = [];
     let unregistered = [];
 
     members.forEach((member: codenvy.IMember) => {
       if (member.id) {
-        let actions = [];
-        roles.forEach((role: any) => {
-          actions = actions.concat(role.actions);
-        });
+        let actions = CodenvyOrganizationRoles[role].actions;
         let permissions = {
           instanceId: this.organization.id,
           userId: member.id,
@@ -535,8 +538,8 @@ export class ListOrganizationMembersController {
    */
   removePermissions(member: codenvy.IMember): void {
     this.isLoading = true;
-    this.codenvyPermissions.removeOrganizationPermissions(member.permissions.instanceId, member.userId).then(() => {
-      if (member.userId === this.cheUser.getUser().id) {
+    this.codenvyPermissions.removeOrganizationPermissions(member.permissions.instanceId, member.id).then(() => {
+      if (member.id === this.cheUser.getUser().id) {
         this.processCurrentUserRemoval();
       } else {
         this.fetchMembers();

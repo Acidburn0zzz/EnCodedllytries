@@ -70,9 +70,13 @@ export class OrganizationDetailsController {
    */
   private organizationName: string;
   /**
-   * Current organization's data.
+   * Current organization's data (injected by $routeProvider)
    */
   private organization: codenvy.IOrganization;
+  /**
+   * Parent organization member's list (injected by $routeProvider)
+   */
+  private parentOrganizationMembers: Array<che.IUser>;
   /**
    * The list of allowed user actions.
    */
@@ -117,7 +121,8 @@ export class OrganizationDetailsController {
   constructor(codenvyResourcesDistribution: CodenvyResourcesDistribution, codenvyPermissions: CodenvyPermissions,
               cheUser: any, $route: ng.route.IRouteService, $location: ng.ILocationService, $rootScope: che.IRootScopeService,
               $scope: ng.IScope, confirmDialogService: any, cheNotification: any,
-              lodash: any, codenvyOrganization: CodenvyOrganization, organization: codenvy.IOrganization) {
+              lodash: any, codenvyOrganization: CodenvyOrganization,
+              initData: any) {
     this.codenvyResourcesDistribution = codenvyResourcesDistribution;
     this.confirmDialogService = confirmDialogService;
     this.codenvyOrganization = codenvyOrganization;
@@ -129,7 +134,8 @@ export class OrganizationDetailsController {
     this.lodash = lodash;
 
     // injected by router
-    this.organization = organization;
+    this.organization = initData.organization as codenvy.IOrganization;
+    this.parentOrganizationMembers = initData.parentOrganizationMembers as Array<che.IUser>;
 
     $rootScope.showIDE = false;
 
