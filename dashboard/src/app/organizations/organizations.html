@@ -9,8 +9,5 @@
   <md-content flex class="organizations-content" ng-show="!organizationsController.isInfoLoading">
     <list-organizations on-update="organizationsController.fetchOrganizations()"
                         organizations="organizationsController.getOrganizations()"></list-organizations>
-    <div class="che-list-empty">
-      <span ng-show="organizationsController.rootOrganizations.length === 0">There are no organizations.</span>
-    </div>
   </md-content>
 </md-content>
