@@ -121,10 +121,9 @@ export class ListOrganizationInviteMembersController {
   /**
    * Handler for member role changed in the list.
    * @param {codenvy.IMember} member
-   * @param {string} role the name of member role in organization
    */
-  onChangeMemberRole(member: codenvy.IMember, role: string): void {
-    member.roles[0] = CodenvyOrganizationRoles[role];
+  onChangeMemberRole(member: codenvy.IMember): void {
+    member.roles[0] = CodenvyOrganizationRoles[member.role];
   }
 
   /**
