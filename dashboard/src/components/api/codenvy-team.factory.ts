@@ -181,8 +181,14 @@ export class CodenvyTeam {
         this.teamEventsManager.subscribeTeamNotifications(organization.id);
       }
 
-      if (this.personalAccount && organization.id !== this.personalAccount.id) {
-        this.cheNamespaceRegistry.getNamespaces().push({id: organization.qualifiedName, label: organization.qualifiedName, location: '/team/' + organization.qualifiedName});
+      if (this.personalAccount) {
+        if (organization.id !== this.personalAccount.id) {
+          this.cheNamespaceRegistry.getNamespaces().push({
+            id: organization.qualifiedName,
+            label: organization.qualifiedName,
+            location: '/team/' + organization.qualifiedName
+          });
+        }
       } else {
         this.cheNamespaceRegistry.getNamespaces().push({id: organization.qualifiedName, label: organization.qualifiedName, location: '/organization/' + organization.qualifiedName});
       }
