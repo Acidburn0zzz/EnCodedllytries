@@ -59,14 +59,16 @@
             </div>
             <div flex="35">
               <md-radio-group ng-model="member.role"
-                              ng-change="listOrganizationInviteMembersController.onChangeMemberRole(member, role)">
-                <md-radio-button value="{{listOrganizationInviteMembersController.getDeveloperRoleValue()}}"></md-radio-button>
+                              ng-change="listOrganizationInviteMembersController.onChangeMemberRole(member)">
+                <md-radio-button ng-disabled="member.id === listOrganizationInviteMembersController.ownerId"
+                                 value="{{listOrganizationInviteMembersController.getDeveloperRoleValue()}}"></md-radio-button>
               </md-radio-group>
             </div>
             <div flex="35">
               <md-radio-group ng-model="member.role"
                               ng-change="listOrganizationInviteMembersController.onChangeMemberRole(member)">
-                <md-radio-button value="{{listOrganizationInviteMembersController.getAdminRoleValue()}}"></md-radio-button>
+                <md-radio-button ng-disabled="member.id === listOrganizationInviteMembersController.ownerId"
+                                 value="{{listOrganizationInviteMembersController.getAdminRoleValue()}}"></md-radio-button>
               </md-radio-group>
             </div>
           </div>
