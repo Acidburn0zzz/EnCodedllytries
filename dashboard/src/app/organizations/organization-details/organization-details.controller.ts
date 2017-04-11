@@ -18,6 +18,7 @@ import {CodenvyResourceLimits} from '../../../components/api/codenvy-resource-li
 import {CodenvyPermissions} from '../../../components/api/codenvy-permissions.factory';
 import {CodenvyOrganization} from '../../../components/api/codenvy-organizations.factory';
 import {CodenvyOrganizationActions} from '../../../components/api/codenvy-organization-actions';
+import {OrganizationsPermissionService} from '../organizations-permission.service';
 
 enum Tab {Settings, Members, Organization}
 
@@ -114,6 +115,8 @@ export class OrganizationDetailsController {
 
   private subOrganizations: Array<any> = [];
 
+  private organizationsPermissionService: OrganizationsPermissionService;
+
   /**
    * Default constructor that is using resource injection
    * @ngInject for Dependency injection
@@ -121,11 +124,12 @@ export class OrganizationDetailsController {
   constructor(codenvyResourcesDistribution: CodenvyResourcesDistribution, codenvyPermissions: CodenvyPermissions,
               cheUser: any, $route: ng.route.IRouteService, $location: ng.ILocationService, $rootScope: che.IRootScopeService,
               $scope: ng.IScope, confirmDialogService: any, cheNotification: any,
-              lodash: any, codenvyOrganization: CodenvyOrganization,
+              lodash: any, codenvyOrganization: CodenvyOrganization, organizationsPermissionService: OrganizationsPermissionService,
               initData: any) {
     this.codenvyResourcesDistribution = codenvyResourcesDistribution;
     this.confirmDialogService = confirmDialogService;
     this.codenvyOrganization = codenvyOrganization;
+    this.organizationsPermissionService = organizationsPermissionService;
     this.codenvyPermissions = codenvyPermissions;
     this.cheNotification = cheNotification;
     this.cheUser = cheUser;
@@ -279,7 +283,7 @@ export class OrganizationDetailsController {
     if (this.isRootOrganization()) {
       return this.codenvyPermissions.getUserServices().hasAdminUserService;
     }
-    return this.organization && this.isUserAllowedTo(CodenvyOrganizationActions.MANAGE_RESOURCES);
+    return this.organizationsPermissionService.isUserAllowedTo(CodenvyOrganizationActions.MANAGE_RESOURCES, this.organization.parent);
   }
 
   /**
