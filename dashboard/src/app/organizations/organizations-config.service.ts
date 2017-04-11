@@ -277,7 +277,7 @@ export class OrganizationsConfigService {
     });
     parentOrgPermissionsPromise.then(
       /* fetch parent organization members */
-      (permissions: Array<condenvy.IPermissions>) => {
+      (permissions: Array<codenvy.IPermissions>) => {
         return this.getOrFetchOrganizationUsers(permissions);
       }, (error: any) => {
         this.logError(error);
@@ -338,7 +338,7 @@ export class OrganizationsConfigService {
       }
     ).then(
       /* fetch parent organization members */
-      (permissions: Array<condenvy.IPermissions>) => {
+      (permissions: Array<codenvy.IPermissions>) => {
         return this.getOrFetchOrganizationUsers(permissions);
       }, (error: any) => {
         this.logError(error);

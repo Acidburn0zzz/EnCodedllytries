@@ -173,6 +173,15 @@ export class OrganizationDetailsController {
   }
 
   /**
+   * Fetch organizations.
+   */
+  fetchOrganizations() {
+    this.codenvyOrganization.fetchOrganizations().then(() => {
+      this.updateData();
+    });
+  }
+
+  /**
    * Update data.
    */
   updateData(): void {
