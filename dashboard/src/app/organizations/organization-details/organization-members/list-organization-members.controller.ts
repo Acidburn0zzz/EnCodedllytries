@@ -298,7 +298,7 @@ export class ListOrganizationMembersController {
       locals: {
         members: this.members,
         callbackController: this,
-        member: member,
+        member: angular.copy(member),
         parentOrganizationId: this.organization.parent,
         parentOrganizationMembers: this.parentOrganizationMembers
       },
