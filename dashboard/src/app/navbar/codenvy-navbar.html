@@ -19,8 +19,8 @@
 -->
 <div class="left-sidebar-container">
   <md-toolbar class="flex-shrink-none">
-    <md-progress-linear md-mode="indeterminate" ng-hide="codenvyNavbarController.email"></md-progress-linear>
-    <div ng-show="codenvyNavbarController.email" layout="column" flex>
+    <md-progress-linear md-mode="indeterminate" ng-hide="codenvyNavbarController.profile"></md-progress-linear>
+    <div ng-show="codenvyNavbarController.profile" layout="column" flex>
 
       <div flex="none" layout="row" layout-align="start center">
         <section class="navbar-top-logo logo-color-white" layout="column" layout-align="center left"
@@ -83,13 +83,13 @@
                 </div>
               </md-button>
             </md-list-item>
-            <md-list-item flex class="navbar-subsection-item" ng-if="!codenvyNavbarController.userServices.hasAdminUserService && !codenvyNavbarController.personalAccount">
+            <md-list-item flex class="navbar-subsection-item" ng-if="!codenvyNavbarController.userServices.hasAdminUserService && !codenvyNavbarController.hasPersonalAccount">
               <md-button nav-bar-selected flex che-reload-href
                          href="{{codenvyNavbarController.menuItemUrl.organizations}}" layout-align="left">
                 <div class="navbar-item" layout="row" layout-align="start center">
                   <md-icon md-font-icon="fa navbar-icon fa-sitemap"></md-icon>
                   <span>Organizations</span>
-                  <span class="navbar-number" ng-show="codenvyNavbarController.getRootOrganizationsNumber()">&nbsp;({{codenvyNavbarController.getRootOrganizationsNumber()}})</span>
+                  <span class="navbar-number" ng-show="codenvyNavbarController.getOrganizationsNumber()">&nbsp;({{codenvyNavbarController.getOrganizationsNumber()}})</span>
                 </div>
               </md-button>
             </md-list-item>
@@ -156,7 +156,7 @@
                   <div class="navbar-item navbar-identity" layout="row" layout-align="start center">
 
                     <i class="navbar-icon" flex="none">
-                      <img class="developers-face" gravatar-src="codenvyNavbarController.email"/>
+                      <img class="developers-face" gravatar-src="codenvyNavbarController.profile.email"/>
                     </i>
                     <span flex style="text-align: left;">{{codenvyNavbarController.cheAPI.getProfile().getFullName(codenvyNavbarController.profile.attributes)}}</span>
                     <i class="fa fa-angle-up navbar-icon" aria-hidden="true"></i>

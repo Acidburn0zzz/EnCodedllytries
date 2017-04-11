@@ -63,10 +63,10 @@ export class CodenvyNavBarController {
   private cheFactory: any;
   private codenvyPermissions: CodenvyPermissions;
   private cheAPI: any;
-  private profile: any;
+  private profile: che.IProfile;
   private logoutAPI: any;
-  private email: string;
-  private personalAccount: any;
+  private hasPersonalAccount: boolean;
+  private organizations: Array<codenvy.IOrganization>;
 
   /**
    * Default constructor
@@ -104,16 +104,6 @@ export class CodenvyNavBarController {
     });
 
     this.profile = cheAPI.getProfile().getProfile();
-    if (this.profile.attributes) {
-      this.email = this.profile.attributes.email;
-    } else {
-      this.profile.$promise.then(() => {
-        this.email = this.profile.attributes.email ? this.profile.attributes.email : 'N/A ';
-      }, () => {
-        this.email = 'N/A ';
-      });
-    }
-
 
     // highlight navbar menu item
     $scope.$on('$locationChangeStart', () => {
@@ -139,10 +129,11 @@ export class CodenvyNavBarController {
 
     cheAPI.cheWorkspace.fetchWorkspaces();
     this.userServices = this.codenvyPermissions.getUserServices();
+    this.organizations = this.codenvyAPI.getOrganization().getOrganizations();
     if (this.codenvyPermissions.getSystemPermissions()) {
       this.updateData();
     } else {
-      this.codenvyPermissions.fetchSystemPermissions().then(() => {
+      this.codenvyPermissions.fetchSystemPermissions().finally(() => {
         this.updateData();
       });
     }
@@ -153,12 +144,12 @@ export class CodenvyNavBarController {
    */
   updateData(): void {
     this.codenvyAPI.getOrganization().fetchOrganizations().then(() => {
-      let organizations = this.codenvyAPI.getOrganization().getOrganizations();
-      if (organizations) {
+      if (this.organizations) {
         let user = this.cheAPI.getUser().getUser();
-        this.personalAccount = organizations.find((organization: any) => {
+        let personalAccount = this.organizations.find((organization: any) => {
           return organization.qualifiedName === user.name;
         });
+        this.hasPersonalAccount = !angular.isUndefined(personalAccount);
       }
     });
 
@@ -166,13 +157,6 @@ export class CodenvyNavBarController {
 
   reload(): void {
     this.$route.reload();
-  }
-
-  /**
-   * Toggle the left menu
-   */
-  toggleLeftMenu(): void {
-    this.$mdSidenav('left').toggle();
   }
 
   /**
@@ -195,16 +179,28 @@ export class CodenvyNavBarController {
   }
 
   /**
+   * Returns number of all organizations.
+   *
+   * @return {number}
+   */
+  getOrganizationsNumber(): number {
+    if (!this.organizations) {
+      return 0;
+    }
+
+    return this.organizations.length;
+  }
+
+  /**
    * Returns number of root organizations.
    *
    * @return {number}
    */
   getRootOrganizationsNumber(): number {
-    let organizations = this.codenvyAPI.getOrganization().getOrganizations();
-    if (!organizations) {
+    if (!this.organizations) {
       return 0;
     }
-    let rootOrganizations = organizations.filter((organization: any) => {
+    let rootOrganizations = this.organizations.filter((organization: any) => {
       return !organization.parent;
     });
 
