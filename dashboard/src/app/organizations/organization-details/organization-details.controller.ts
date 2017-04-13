@@ -528,7 +528,7 @@ export class OrganizationDetailsController {
    */
   getBackButtonLink(): any {
     if (this.organization && this.organization.parent) {
-      let parent = this.organization.qualifiedName.replace('/' + this.organization.name, '');
+      let parent = this.organization.qualifiedName.replace(/\/[^\/]+$/, '');
       return {link: '#/organization/' + parent, title: parent};
     } else {
       return {link: '#/organizations', title: 'Organizations'};
