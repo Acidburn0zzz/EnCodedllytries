@@ -6,17 +6,17 @@
                      che-hide-search="!listOrganizationsController.organizations || listOrganizationsController.organizations.length === 0"
                      che-add-button-title="{{listOrganizationsController.parentName ? 'Add Sub-Organization' : 'Add Organization'}}"
                      che-add-button-href="#/admin/create-organization{{listOrganizationsController.parentName ? '/' + listOrganizationsController.parentName : ''}}"
-                     che-hide-add="!listOrganizationsController.hasManagePermission"
+                     che-hide-add="!listOrganizationsController.hasManagePermission()"
                      che-delete-button-title="Delete"
                      che-on-delete="listOrganizationsController.deleteSelectedOrganizations()"
-                     che-hide-delete="!listOrganizationsController.hasManagePermission || listOrganizationsController.isNoSelected"
+                     che-hide-delete="!listOrganizationsController.hasManagePermission() || listOrganizationsController.isNoSelected"
                      che-filter-values="listOrganizationsController.namespaceLabels"
                      che-on-filter-changed="listOrganizationsController.onFilterChanged">
       <div flex="100"
            layout="row"
            layout-align="start stretch"
            class="che-list-item-row">
-        <div ng-if="listOrganizationsController.hasManagePermission"
+        <div ng-if="listOrganizationsController.hasManagePermission()"
              layout="column" layout-gt-xs="row" layout-align="start center" class="che-checkbox-area">
           <div layout="row" layout-align="center center" class="che-list-item-checkbox-main">
             <md-checkbox class="che-list-item-checkbox"
@@ -52,7 +52,7 @@
         members="listOrganizationsController.getMembersCount(organization.id)"
         total-ram="listOrganizationsController.getTotalRAM(organization.id)"
         available-ram="listOrganizationsController.getAvailableRAM(organization.id)"
-        cdvy-is-selectable="listOrganizationsController.hasManagePermission"
+        cdvy-is-selectable="listOrganizationsController.hasManagePermission()"
         ng-model="listOrganizationsController.organizationsSelectedStatus[organization.id]"
         on-update="listOrganizationsController.onUpdate()"
         cdvy-on-checkbox-click="listOrganizationsController.updateSelectedStatus()">

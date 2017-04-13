@@ -102,6 +102,10 @@ export class ListOrganizationsController {
    */
   private parentName: string;
   /**
+   * Parent organization id.
+   */
+  private parentId: string;
+  /**
    * User order by.
    */
   private userOrderBy: string;
@@ -113,10 +117,6 @@ export class ListOrganizationsController {
    * User services.
    */
   private userServices: codenvy.IUserServices;
-  /**
-   * Has Manage permission
-   */
-  private hasManagePermission: boolean;
 
   /**
    * Default constructor that is using resource
@@ -150,6 +150,18 @@ export class ListOrganizationsController {
   }
 
   /**
+   * Returns true if user has manage permission.
+   *
+   * @returns {boolean}
+   */
+  hasManagePermission(): boolean {
+    if (this.parentId) {
+      return this.organizationsPermissionService.isUserAllowedTo(CodenvyOrganizationActions.MANAGE_SUB_ORGANIZATION, this.parentId);
+    }
+    return this.userServices.hasAdminUserService;
+  }
+
+  /**
    * Process organization - retrieving additional data.
    */
   processOrganizations(): void {
@@ -158,14 +170,11 @@ export class ListOrganizationsController {
         return organization.qualifiedName === this.parentName;
       });
       if (!parentOrganization) {
-        this.hasManagePermission = false;
+        this.parentId = null;
       } else {
-        this.codenvyPermissions.fetchOrganizationPermissions(parentOrganization.id).then(() => {
-          this.hasManagePermission = this.organizationsPermissionService.isUserAllowedTo(CodenvyOrganizationActions.MANAGE_SUB_ORGANIZATION, parentOrganization.id);
-        });
+        this.parentId = parentOrganization.id;
+        this.codenvyPermissions.fetchOrganizationPermissions(parentOrganization.id);
       }
-    } else {
-      this.hasManagePermission = this.userServices.hasAdminUserService;
     }
     if (this.organizations && this.organizations.length) {
       this.organizationMembers = new Map();
