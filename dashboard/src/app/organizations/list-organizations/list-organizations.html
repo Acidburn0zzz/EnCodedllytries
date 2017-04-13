@@ -1,5 +1,5 @@
 <md-content flex class="list-organizations-content">
-  <div class="list-organizations">
+  <div ng-class="{'list-empty': !(listOrganizationsController.organizations | filter:listOrganizationsController.organizationFilter).length}">
     <che-list-header che-hide-header="!listOrganizationsController.organizations || (listOrganizationsController.organizations | filter:listOrganizationsController.organizationFilter).length === 0"
                      che-input-placeholder="Search"
                      che-search-model="listOrganizationsController.organizationFilter.name"
@@ -60,6 +60,6 @@
     </che-list>
   </div>
   <div class="che-list-empty">
-    <span ng-show="(listOrganizationsController.organizations | filter:listOrganizationsController.organizationFilter).length === 0">There are no organizations.</span>
+    <span ng-show="(listOrganizationsController.organizations | filter:listOrganizationsController.organizationFilter).length === 0">There are no  {{listOrganizationsController.parentName ? 'sub-organizations' : 'organizations'}}.</span>
   </div>
 </md-content>
