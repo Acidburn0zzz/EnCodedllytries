@@ -141,7 +141,7 @@ export class ListOrganizationsController {
 
     $scope.$watch(() => {
       return this.organizations;
-    }, (newValue, oldValue) => {
+    }, (newValue: Array<any>, oldValue: Array<any>) => {
       if (newValue && !angular.equals(newValue, oldValue)) {
         this.processOrganizations();
       }
@@ -166,15 +166,8 @@ export class ListOrganizationsController {
    */
   processOrganizations(): void {
     if (this.parentName) {
-      let parentOrganization = this.codenvyOrganization.getOrganizations().find((organization: codenvy.IOrganization) => {
-        return organization.qualifiedName === this.parentName;
-      });
-      if (!parentOrganization) {
-        this.parentId = null;
-      } else {
-        this.parentId = parentOrganization.id;
-        this.codenvyPermissions.fetchOrganizationPermissions(parentOrganization.id);
-      }
+      let parentOrganization = this.codenvyOrganization.getOrganizationByName(this.parentName);
+      this.parentId = parentOrganization ? parentOrganization.id : null;
     }
     if (this.organizations && this.organizations.length) {
       this.organizationMembers = new Map();
