@@ -18,6 +18,7 @@ import {CodenvyOrganizationRoles} from './codenvy-organization-roles';
 
 interface IOrganizationsResource<T> extends ng.resource.IResourceClass<T> {
   getOrganizations(): ng.resource.IResource<T>;
+  getUserOrganizations(data: { userId: string }): ng.resource.IResource<T>;
   createOrganization(data: { name: string, parent?: string }): ng.resource.IResource<T>;
   fetchOrganization(data: { id: string }): ng.resource.IResource<T>;
   deleteOrganization(data: { id: string }): ng.resource.IResource<T>;
@@ -38,9 +39,13 @@ export class CodenvyOrganization {
   private $q: ng.IQService;
   private lodash: any;
   /**
-   * Organizations map by organization's id.
+   * Current user organization map by organization's id.
    */
-  private organizationsMap: Map<string, any> = new Map();
+  private organizationsMap: Map<string, codenvy.IOrganization> = new Map();
+  /**
+   * User organization map by users's id.
+   */
+  private userOrganizationsMap: Map<string, Array<codenvy.IOrganization>> = new Map();
   /**
    * Array of organizations.
    */
@@ -52,7 +57,7 @@ export class CodenvyOrganization {
   /**
    * Organizations map by parent organization's id.
    */
-  private subOrganizationsMap: Map<string, any> = new Map();
+  private subOrganizationsMap: Map<string, Array<codenvy.IOrganization>> = new Map();
 
   /**
    * Default constructor that is using resource
@@ -65,6 +70,7 @@ export class CodenvyOrganization {
 
     this.remoteOrganizationAPI = <IOrganizationsResource<any>>$resource('/api/organization', {}, {
       getOrganizations: {method: 'GET', url: '/api/organization', isArray: true},
+      getUserOrganizations: {method: 'GET', url: '/api/organization?user=:userId', isArray: true},
       fetchOrganization: {method: 'GET', url: '/api/organization/:id'},
       createOrganization: {method: 'POST', url: '/api/organization'},
       deleteOrganization: {method: 'DELETE', url: '/api/organization/:id'},
@@ -82,7 +88,7 @@ export class CodenvyOrganization {
   fetchSubOrganizationsById(id: string): ng.IPromise<any> {
     let data = {'id': id};
     let promise = this.remoteOrganizationAPI.fetchSubOrganizations(data).$promise;
-    let resultPromise = promise.then((organizations: Array<any>) => {
+    let resultPromise = promise.then((organizations: Array<codenvy.IOrganization>) => {
       this.subOrganizationsMap.set(id, organizations);
       return organizations;
     }, (error: any) => {
@@ -96,7 +102,7 @@ export class CodenvyOrganization {
   }
 
   /**
-   * Request the list of available organizations.
+   * Request the list of available organizations for the current user.
    *
    * @returns {ng.IPromise<any>}
    */
@@ -112,14 +118,32 @@ export class CodenvyOrganization {
       });
       return this.organizations;
     }, (error: any) => {
-      if (error.status === 304) {
+      if (error && error.status === 304) {
         return this.organizations;
-      } else {
-        return this.$q.reject(error);
       }
+      return this.$q.reject(error);
     });
 
     return resultPromise;
+  }
+
+  /**
+   * Request the list of available organizations for an user.
+   * @param userId {string}
+   * @returns {ng.IPromise<any>}
+   */
+  fetchUserOrganizations(userId: string): ng.IPromise<any> {
+    let promise = this.remoteOrganizationAPI.getUserOrganizations({userId: userId}).$promise;
+
+    return promise.then((organizations: Array<codenvy.IOrganization>) => {
+      this.userOrganizationsMap.set(userId, organizations);
+      return organizations;
+    }, (error: any) => {
+      if (error && error.status === 304) {
+        return this.userOrganizationsMap.get(userId);
+      }
+        return this.$q.reject(error);
+    });
   }
 
   /**

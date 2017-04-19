@@ -15,6 +15,7 @@
 'use strict';
 import {LicenseMessagesService} from '../../onprem/license-messages/license-messages.service';
 import {CodenvyLicense} from '../../../components/api/codenvy-license.factory';
+import {CodenvyOrganization} from '../../../components/api/codenvy-organizations.factory';
 
 
 /**
@@ -43,18 +44,21 @@ export class AdminsUserManagementCtrl {
   isBulkChecked: boolean;
 
   private confirmDialogService: any;
+  private codenvyOrganization: CodenvyOrganization;
+  private userOrganizationCount: {[userId: string]: number} = {};
 
   /**
    * Default constructor.
    * @ngInject for Dependency injection
    */
   constructor($q: ng.IQService, $log: ng.ILogService, $mdDialog: ng.material.IDialogService, cheUser: any, codenvyLicense: CodenvyLicense,
-              cheNotification: any, licenseMessagesService: LicenseMessagesService, confirmDialogService: any) {
+              cheNotification: any, licenseMessagesService: LicenseMessagesService, confirmDialogService: any, codenvyOrganization: CodenvyOrganization) {
     this.$q = $q;
     this.$log = $log;
     this.$mdDialog = $mdDialog;
     this.cheUser = cheUser;
     this.codenvyLicense = codenvyLicense;
+    this.codenvyOrganization = codenvyOrganization;
     this.cheNotification = cheNotification;
     this.licenseMessagesService = licenseMessagesService;
     this.confirmDialogService = confirmDialogService;
@@ -90,6 +94,23 @@ export class AdminsUserManagementCtrl {
     }
 
     this.pagesInfo = this.cheUser.getPagesInfo();
+  }
+
+  /**
+   * Fetch user's organizations
+   * @param userId {string}
+   */
+  fetchUserOrganizations(userId: string): void {
+    let currentUser: che.IUser = this.cheUser.getUser();
+    if (currentUser && currentUser.id === userId) {
+      this.codenvyOrganization.fetchOrganizations().then((organizations: Array<any>) => {
+        this.userOrganizationCount[userId] = organizations.length;
+      });
+      return;
+    }
+    this.codenvyOrganization.fetchUserOrganizations(userId).then((organizations: Array<any>) => {
+      this.userOrganizationCount[userId] = organizations.length;
+    });
   }
 
   /**
