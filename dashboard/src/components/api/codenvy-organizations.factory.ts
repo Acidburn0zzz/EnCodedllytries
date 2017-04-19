@@ -15,6 +15,7 @@
 'use strict';
 
 import {CodenvyOrganizationRoles} from './codenvy-organization-roles';
+import {PagingInfoResource} from '../utils/paging-info-resource';
 
 interface IOrganizationsResource<T> extends ng.resource.IResourceClass<T> {
   getOrganizations(): ng.resource.IResource<T>;
@@ -54,6 +55,10 @@ export class CodenvyOrganization {
    */
   private subOrganizationsMap: Map<string, any> = new Map();
 
+  private organizationsPagingInfo: PagingInfoResource;
+
+  private requestData: {userId?: string; [param: string]: string};
+
   /**
    * Default constructor that is using resource
    * @ngInject for Dependency injection
@@ -71,6 +76,9 @@ export class CodenvyOrganization {
       updateOrganization: {method: 'POST', url: '/api/organization/:id'},
       fetchSubOrganizations: {method: 'GET', url: '/api/organization/:id/organizations'}
     });
+
+    this.requestData = {};
+    this.organizationsPagingInfo = new PagingInfoResource('/api/organization', this.requestData, $q, $resource);
   }
 
   /**
@@ -100,8 +108,13 @@ export class CodenvyOrganization {
    *
    * @returns {ng.IPromise<any>}
    */
-  fetchOrganizations(): ng.IPromise<any> {
-    let promise = this.remoteOrganizationAPI.getOrganizations().$promise;
+  fetchOrganizations(maxItems?: number, userId?: string): ng.IPromise<any> {
+    if (angular.isDefined(userId)) {
+      this.requestData.userId = userId;
+    } else if (this.requestData.userId) {
+      delete this.requestData.userId;
+    }
+    let promise = this.organizationsPagingInfo.fetchObjects(maxItems);
 
     let resultPromise = promise.then((organizations: Array<codenvy.IOrganization>) => {
       this.organizations.length = 0;
@@ -112,14 +125,24 @@ export class CodenvyOrganization {
       });
       return this.organizations;
     }, (error: any) => {
-      if (error.status === 304) {
-        return this.organizations;
-      } else {
         return this.$q.reject(error);
-      }
     });
 
     return resultPromise;
+  }
+
+  /**
+   * Ask for loading the organization page objects
+   * @param pageKey {string} - the key of page ('first', 'prev', 'next', 'last'  or '1', '2', '3' ...)
+   * @returns {ng.IPromise<any>} the promise
+   */
+  fetchOrganizationPageObjects(pageKey: string, userId?: string): ng.IPromise<any> {
+    if (angular.isDefined(userId)) {
+      this.requestData.userId = userId;
+    } else if (this.requestData.userId) {
+      delete this.requestData.userId;
+    }
+    return this.organizationsPagingInfo.fetchPageObjects(pageKey);
   }
 
   /**

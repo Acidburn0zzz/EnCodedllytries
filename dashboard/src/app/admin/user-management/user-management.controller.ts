@@ -14,7 +14,6 @@
  */
 'use strict';
 import {LicenseMessagesService} from '../../onprem/license-messages/license-messages.service';
-import {CodenvyLicense} from '../../../components/api/codenvy-license.factory';
 
 
 /**
@@ -25,8 +24,8 @@ export class AdminsUserManagementCtrl {
   $q: ng.IQService;
   $log: ng.ILogService;
   $mdDialog: ng.material.IDialogService;
+  $location: ng.ILocationService;
   cheUser: any;
-  codenvyLicense: CodenvyLicense;
   licenseMessagesService: LicenseMessagesService;
   cheNotification: any;
   pagesInfo: any;
@@ -48,13 +47,12 @@ export class AdminsUserManagementCtrl {
    * Default constructor.
    * @ngInject for Dependency injection
    */
-  constructor($q: ng.IQService, $log: ng.ILogService, $mdDialog: ng.material.IDialogService, cheUser: any, codenvyLicense: CodenvyLicense,
-              cheNotification: any, licenseMessagesService: LicenseMessagesService, confirmDialogService: any) {
+  constructor($q: ng.IQService, $log: ng.ILogService, $mdDialog: ng.material.IDialogService, $location: ng.ILocationService, cheUser: any, cheNotification: any, licenseMessagesService: LicenseMessagesService, confirmDialogService: any) {
     this.$q = $q;
     this.$log = $log;
     this.$mdDialog = $mdDialog;
+    this.$location = $location;
     this.cheUser = cheUser;
-    this.codenvyLicense = codenvyLicense;
     this.cheNotification = cheNotification;
     this.licenseMessagesService = licenseMessagesService;
     this.confirmDialogService = confirmDialogService;
@@ -90,6 +88,10 @@ export class AdminsUserManagementCtrl {
     }
 
     this.pagesInfo = this.cheUser.getPagesInfo();
+  }
+
+  redirectToUserDetails(userId: string): void {
+    this.$location.path('/admin/userdetails/' + userId);
   }
 
   /**
@@ -163,7 +165,6 @@ export class AdminsUserManagementCtrl {
       let promise = this.cheUser.deleteUserById(user.id);
       promise.then(() => {
         this.isLoading = false;
-        this.codenvyLicense.fetchLicenseLegality();//fetch license legality
         this.updateUsers();
         this.licenseMessagesService.fetchMessages();
       }, (error: any) => {
@@ -228,7 +229,6 @@ export class AdminsUserManagementCtrl {
           this.isLoading = false;
           this.updateUsers();
           this.updateSelectedStatus();
-          this.codenvyLicense.fetchLicenseLegality();//fetch license legality
           this.licenseMessagesService.fetchMessages();
         }, (error: any) => {
           this.isLoading = false;

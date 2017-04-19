@@ -15,22 +15,22 @@
 'use strict';
 
 /**
- * @ngdoc controller
- * @name account.profile.controller:AccountProfileController
- * @description This class is handling the controller for the account's profile
- * @author Florent Benoit
+ * This is class of remote page labels.
+ *
  * @author Oleksii Orel
  */
-export class AccountProfileController {
+export class RemotePageLabels {
 
-  /**
-   * Default constructor that is using resource
-   * @ngInject for Dependency injection
-   */
-  constructor(jsonCountries, jsonJobs) {
-    'ngInject';
-
-    this.countries = angular.fromJson(jsonCountries);
-    this.jobs = angular.fromJson(jsonJobs);
+  static get FIRST(): string {
+    return 'first';
+  }
+  static get PREVIOUS(): string {
+    return 'prev';
+  }
+  static get NEXT(): string {
+    return 'next';
+  }
+  static get LAST(): string {
+    return 'last';
   }
 }

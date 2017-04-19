@@ -20,19 +20,15 @@
 <che-toolbar che-title="Account"></che-toolbar>
 
 <md-content md-scroll-y flex>
-  <md-tabs md-dynamic-height md-stretch-tabs="auto" md-center-tabs="" md-selected="accountCtrl.selectedTabIndex"
-           class="account-menu">
+  <md-tabs md-dynamic-height md-stretch-tabs="auto" md-center-tabs="" md-selected="accountCtrl.selectedTabIndex">
     <md-tab>
       <md-tab-label>
         <md-icon md-font-icon="fa-user" class="fa che-tab-label-icon"></md-icon>
         <span class="che-tab-label-title">Profile</span>
       </md-tab-label>
       <md-tab-body>
-        <div class="account-content">
-          <ng-form name="profileInformationForm">
-            <account-profile></account-profile>
-          </ng-form>
-        </div>
+        <account-profile profile-attributes="accountCtrl.profileAttributes"
+                         profile-information-form="profileInformationForm"></account-profile>
       </md-tab-body>
     </md-tab>
 

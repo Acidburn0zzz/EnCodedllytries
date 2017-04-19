@@ -78,11 +78,9 @@
                                    ng-click="adminsUserManagementCtrl.updateSelectedStatus()"
                                    che-aria-label-checkbox="User {{user.id}}"></che-list-item-checked>
           </div>
-          <div flex
-               layout-xs="column" layout-gt-xs="row"
-               layout-align-gt-xs="start center"
-               layout-align-xs="start start"
-               class="che-list-item-details">
+          <div flex layout-xs="column" layout-gt-xs="row" layout-align-gt-xs="start center"
+               layout-align-xs="start start" class="che-list-item-details"
+               ng-click="adminsUserManagementCtrl.redirectToUserDetails(user.id)">
             <div flex-gt-xs="50"
                  class="che-list-item-name">
               <span class="che-xs-header noselect" hide-gt-xs>Email</span>
@@ -95,7 +93,7 @@
             </div>
             <div flex-gt-xs="25">
               <span class="che-xs-header noselect" hide-gt-xs>Actions</span>
-                  <span class="che-list-actions">
+              <span class="che-list-actions">
                     <div ng-click="adminsUserManagementCtrl.removeUser($event, user);" tooltip="Remove user">
                       <span class="material-design icon-ic_remove_circle_outline_24px"></span>
                     </div>

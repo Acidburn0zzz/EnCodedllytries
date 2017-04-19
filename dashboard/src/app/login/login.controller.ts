@@ -18,8 +18,8 @@ export class LoginCtrl {
   /*@ngInject*/
   constructor($http, $cookies, $window, cheUser: any, $timeout, $location) {
 
-    this.username = '';
-    this.password = '';
+    this.username = 'qaadmin';
+    this.password = '1C669oBgFkQr';
 
     this.$http = $http;
     this.$cookies = $cookies;

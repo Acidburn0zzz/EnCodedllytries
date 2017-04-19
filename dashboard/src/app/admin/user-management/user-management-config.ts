@@ -16,22 +16,45 @@
 
 import {AdminsAddUserController} from './add-user/add-user.controller';
 import {AdminsUserManagementCtrl} from './user-management.controller';
+import {AdminUserDetailsController} from './user-details/user-details.controller';
+import {CodenvyPermissions} from '../../../components/api/codenvy-permissions.factory';
 
 export class AdminsUserManagementConfig {
 
   constructor(register: che.IRegisterService) {
+    register.controller('AdminUserDetailsController', AdminUserDetailsController);
     register.controller('AdminsAddUserController', AdminsAddUserController);
     register.controller('AdminsUserManagementCtrl', AdminsUserManagementCtrl);
 
+
+    const userDetailLocationProvider = {
+      title: 'User Details',
+      reloadOnSearch: false,
+      templateUrl: 'app/admin/user-management/user-details/user-details.html',
+      controller: 'AdminUserDetailsController',
+      controllerAs: 'adminUserDetailsController',
+      resolve: {
+        check: ['$q', 'codenvyPermissions', ($q: ng.IQService, codenvyPermissions: CodenvyPermissions) => {
+          let defer = $q.defer();
+          if (codenvyPermissions.getUserServices().hasAdminUserService) {
+            defer.resolve();
+          } else {
+            defer.reject();
+          }
+          return defer.promise;
+        }]
+      }
+    };
+
     // configure routes
-    register.app.config(function ($routeProvider) {
+    register.app.config(($routeProvider: ng.route.IRouteProvider) => {
       $routeProvider.accessWhen('/admin/usermanagement', {
         title: 'Users',
         templateUrl: 'app/admin/user-management/user-management.html',
         controller: 'AdminsUserManagementCtrl',
         controllerAs: 'adminsUserManagementCtrl',
         resolve: {
-          check: ['$q', 'codenvyPermissions', ($q, codenvyPermissions) => {
+          check: ['$q', 'codenvyPermissions', ($q: ng.IQService, codenvyPermissions: CodenvyPermissions) => {
             let defer = $q.defer();
             if (codenvyPermissions.getUserServices().hasUserService) {
               defer.resolve();
@@ -41,7 +64,8 @@ export class AdminsUserManagementConfig {
             return defer.promise;
           }]
         }
-      });
+      })
+        .accessWhen('/admin/userdetails/:userId', userDetailLocationProvider);
     });
 
   }
