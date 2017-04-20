@@ -45,9 +45,10 @@ import static java.util.Objects.requireNonNull;
 @Singleton
 public class InviteManager {
     private final PermissionsManager permissionsManager;
-    private final UserManager        userManager;
     private final InviteDao          inviteDao;
-    private final EventService       eventService;
+
+    protected final EventService eventService;
+    protected final UserManager  userManager;
 
     @Inject
     public InviteManager(PermissionsManager permissionsManager,
@@ -93,6 +94,13 @@ public class InviteManager {
             eventService.publish(new InviteCreatedEvent(currentSubject.isAnonymous() ? null : currentSubject.getUserId(),
                                                         invite));
         }
+    }
+
+    public Invite getInvite(String domainId, String instanceId, String email) throws NotFoundException, ServerException {
+        requireNonNull(domainId, "Required non-null domain id");
+        requireNonNull(instanceId, "Required non-null instance id");
+        requireNonNull(email, "Required non-null email");
+        return inviteDao.getInvite(domainId, instanceId, email);
     }
 
     /**
