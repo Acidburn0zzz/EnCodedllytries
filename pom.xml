@@ -53,7 +53,7 @@
         <com.dumbster.version>1.7.1</com.dumbster.version>
         <com.github.cloudfoundry-community.nats-client.version>0.5.1</com.github.cloudfoundry-community.nats-client.version>
         <com.license4j.version>4.6.0</com.license4j.version>
-        <com.nimbusds.version>3.0</com.nimbusds.version>
+        <com.nimbusds.version>7.9</com.nimbusds.version>
         <commons-configuration.version>1.10</commons-configuration.version>
         <de.flapdoodle.embed-mongo.version>1.50.0</de.flapdoodle.embed-mongo.version>
         <jline.version>2.12</jline.version>
